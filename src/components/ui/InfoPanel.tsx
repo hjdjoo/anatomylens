@@ -1,5 +1,32 @@
 import { useAnatomyStore } from '@/store';
-import { getStructureById, getContentForStructure } from '@/data';
+import torsoMetadata from '@/data/torso_metadata.json';
+
+// Type for metadata structure
+interface StructureMetadata {
+  meshId: string;
+  originalName: string;
+  type: string;
+  layer: number;
+  regions: string[];
+  center: [number, number, number];
+}
+
+// Quick name formatter for mesh IDs
+function formatName(meshId: string): { common: string; anatomical: string } {
+  let clean = meshId
+    .replace(/_[jio]$/, '')
+    .replace(/_\d+$/, '')
+    .replace(/_ol$/, '')
+    .replace(/_or$/, '')
+    .replace(/[()]/g, '');
+  
+  const words = clean.split('_').filter(Boolean);
+  const titleCased = words
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+  
+  return { common: titleCased, anatomical: titleCased };
+}
 
 /**
  * Information panel that displays details about the selected structure.
@@ -14,14 +41,14 @@ export function InfoPanel() {
     setSelectedStructure,
   } = useAnatomyStore();
 
-  const structure = selectedStructureId ? getStructureById(selectedStructureId) : null;
-  const content = selectedStructureId ? getContentForStructure(selectedStructureId) : null;
+  // Get structure from metadata
+  const metadata = torsoMetadata as { structures: Record<string, StructureMetadata> };
+  const structure = selectedStructureId ? metadata.structures[selectedStructureId] : null;
 
   if (!infoPanelOpen || !structure) return null;
 
-  const displayName = viewMode === 'fitness'
-    ? structure.commonName
-    : structure.anatomicalName;
+  const names = formatName(selectedStructureId!);
+  const displayName = viewMode === 'fitness' ? names.common : names.anatomical;
 
   return (
     <div className="absolute right-4 top-4 bottom-4 w-80 max-w-[calc(100vw-2rem)] overflow-hidden">
@@ -33,16 +60,9 @@ export function InfoPanel() {
               <h2 className="text-lg font-semibold text-surface-100 truncate">
                 {displayName}
               </h2>
-              {viewMode === 'fitness' && structure.anatomicalName !== structure.commonName && (
-                <p className="text-sm text-surface-400 truncate">
-                  {structure.anatomicalName}
-                </p>
-              )}
-              {viewMode === 'clinical' && structure.latinName && (
-                <p className="text-sm text-surface-400 italic truncate">
-                  {structure.latinName}
-                </p>
-              )}
+              <p className="text-sm text-surface-400 truncate">
+                {structure.originalName}
+              </p>
             </div>
             <button
               onClick={() => {
@@ -57,7 +77,7 @@ export function InfoPanel() {
               </svg>
             </button>
           </div>
-
+          
           {/* Type badge */}
           <span className={`
             inline-block mt-2 px-2 py-0.5 rounded text-xs uppercase tracking-wide font-medium
@@ -72,143 +92,56 @@ export function InfoPanel() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {content ? (
-            <>
-              {/* Description */}
-              <section>
-                <p className="text-sm text-surface-300 leading-relaxed">
-                  {viewMode === 'fitness'
-                    ? content.simpleDescription
-                    : content.clinicalDescription
-                  }
-                </p>
-              </section>
+          {/* Regions */}
+          <section className="space-y-2">
+            <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
+              Location
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              {structure.regions.map((region) => (
+                <span 
+                  key={region}
+                  className="px-2 py-1 text-xs bg-surface-800 text-surface-300 rounded-md capitalize"
+                >
+                  {region.replace(/_/g, ' ')}
+                </span>
+              ))}
+            </div>
+          </section>
 
-              {/* Muscle Details */}
-              {content.muscleDetails && (
-                <>
-                  {/* Origin & Insertion */}
-                  <section className="space-y-2">
-                    <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-                      Attachments
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-surface-500">Origin: </span>
-                        <span className="text-surface-300">
-                          {content.muscleDetails.origin.join(', ')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-surface-500">Insertion: </span>
-                        <span className="text-surface-300">
-                          {content.muscleDetails.insertion.join(', ')}
-                        </span>
-                      </div>
-                    </div>
-                  </section>
-
-                  {/* Actions */}
-                  <section className="space-y-2">
-                    <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-                      Actions
-                    </h3>
-                    <ul className="space-y-1">
-                      {content.muscleDetails.actions.map((action, i) => (
-                        <li key={i} className="text-sm text-surface-300 flex items-start gap-2">
-                          <span className="text-surface-600 mt-1.5">•</span>
-                          {action}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-
-                  {/* Innervation (clinical mode) */}
-                  {viewMode === 'clinical' && content.muscleDetails.innervation && (
-                    <section className="space-y-2">
-                      <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-                        Innervation
-                      </h3>
-                      <p className="text-sm text-surface-300">
-                        {content.muscleDetails.innervation}
-                      </p>
-                    </section>
-                  )}
-
-                  {/* Fitness Notes (fitness mode) */}
-                  {viewMode === 'fitness' && content.muscleDetails.fitnessNotes && (
-                    <section className="space-y-2">
-                      <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-                        Training Tips
-                      </h3>
-                      <p className="text-sm text-surface-300">
-                        {content.muscleDetails.fitnessNotes}
-                      </p>
-                    </section>
-                  )}
-
-                  {/* Exercises */}
-                  {content.muscleDetails.exercises && content.muscleDetails.exercises.length > 0 && (
-                    <section className="space-y-2">
-                      <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-                        Exercises
-                      </h3>
-                      <div className="flex flex-wrap gap-1.5">
-                        {content.muscleDetails.exercises.map((exercise, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 text-xs bg-surface-800 text-surface-300 rounded-md"
-                          >
-                            {exercise}
-                          </span>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                </>
-              )}
-
-              {/* Clinical Relevance (clinical mode) */}
-              {viewMode === 'clinical' && content.clinicalRelevance && (
-                <section className="space-y-2">
-                  <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-                    Clinical Relevance
-                  </h3>
-                  <p className="text-sm text-surface-300">
-                    {content.clinicalRelevance}
-                  </p>
-                </section>
-              )}
-
-              {/* Related Structures */}
-              {content.relatedStructures.length > 0 && (
-                <section className="space-y-2">
-                  <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-                    Related Structures
-                  </h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {content.relatedStructures.map((relatedId) => {
-                      const related = getStructureById(relatedId);
-                      if (!related) return null;
-                      return (
-                        <button
-                          key={relatedId}
-                          onClick={() => setSelectedStructure(relatedId)}
-                          className="px-2 py-1 text-xs bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-md transition-colors"
-                        >
-                          {viewMode === 'fitness' ? related.commonName : related.anatomicalName}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-surface-500 italic">
-              No detailed information available for this structure yet.
+          {/* Layer info */}
+          <section className="space-y-2">
+            <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
+              Depth Layer
+            </h3>
+            <p className="text-sm text-surface-300">
+              {structure.layer === 0 && 'Deep (innermost)'}
+              {structure.layer === 1 && 'Deep intermediate'}
+              {structure.layer === 2 && 'Intermediate'}
+              {structure.layer === 3 && 'Superficial (outermost)'}
+              {structure.layer > 3 && `Layer ${structure.layer}`}
             </p>
-          )}
+          </section>
+
+          {/* Position */}
+          <section className="space-y-2">
+            <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
+              Center Position
+            </h3>
+            <p className="text-xs text-surface-500 font-mono">
+              x: {structure.center[0].toFixed(3)}, 
+              y: {structure.center[1].toFixed(3)}, 
+              z: {structure.center[2].toFixed(3)}
+            </p>
+          </section>
+
+          {/* Placeholder for future content */}
+          <section className="pt-4 border-t border-surface-800">
+            <p className="text-xs text-surface-500 italic">
+              Detailed descriptions, muscle attachments, and exercise information 
+              will be added as the content database grows.
+            </p>
+          </section>
         </div>
       </div>
     </div>

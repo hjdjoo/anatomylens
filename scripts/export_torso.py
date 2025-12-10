@@ -26,7 +26,7 @@ from typing import Dict, List, Set, Optional, Any
 # ============================================================
 
 # Output directory - change this to your project's public/models folder
-OUTPUT_DIR = os.path.expanduser("~/anatomy-explorer/public/models")
+OUTPUT_DIR = os.path.expanduser("~/Code/anatomy-explorer/public/models")
 
 # Output filenames
 GLTF_FILENAME = "torso.glb"
@@ -340,12 +340,13 @@ def export_gltf(objects: List[bpy.types.Object], output_path: str):
     bpy.ops.export_scene.gltf(
         filepath=output_path,
         use_selection=True,
+        export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6, 
         export_format='GLB',  # Binary format, more compact
         export_apply=True,  # Apply modifiers
         export_texcoords=True,
         export_normals=True,
         export_materials='EXPORT',
-        export_colors=True,
+        export_all_vertex_colors=True,  # Include vertex colors if present
         export_yup=True,  # Y-up for Three.js
     )
     

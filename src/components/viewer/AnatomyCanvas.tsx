@@ -2,9 +2,12 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import { useAnatomyStore } from '@/store';
-import { AnatomyModel } from './AnatomyModel';
+import { AnatomyModelGLTF } from './AnatomyModelGLTF';
 import { LoadingIndicator } from './LoadingIndicator';
 import { StructureLabel } from './StructureLabel';
+
+// Set to true to use placeholder geometry, false for real GLTF model
+const USE_PLACEHOLDER = false;
 
 /**
  * Main 3D canvas component for the anatomy viewer.
@@ -16,7 +19,7 @@ export function AnatomyCanvas() {
   return (
     <Canvas
       camera={{ 
-        position: [0, 0, 3], 
+        position: [0, 0, 1.5], 
         fov: 50,
         near: 0.1,
         far: 100,
@@ -50,7 +53,7 @@ export function AnatomyCanvas() {
 
       {/* Ground shadow */}
       <ContactShadows
-        position={[0, -1.5, 0]}
+        position={[0, -0.5, 0]}
         opacity={0.4}
         scale={10}
         blur={2}
@@ -59,7 +62,7 @@ export function AnatomyCanvas() {
 
       {/* Main content with loading fallback */}
       <Suspense fallback={<LoadingIndicator />}>
-        <AnatomyModel />
+        <AnatomyModelGLTF />
         <StructureLabel />
       </Suspense>
 
@@ -68,8 +71,8 @@ export function AnatomyCanvas() {
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
-        minDistance={1}
-        maxDistance={10}
+        minDistance={0.3}
+        maxDistance={5}
         minPolarAngle={Math.PI * 0.1}
         maxPolarAngle={Math.PI * 0.9}
         // Track zoom level for layer visibility
@@ -77,7 +80,7 @@ export function AnatomyCanvas() {
           if (e?.target) {
             const distance = e.target.getDistance();
             // Normalize zoom: closer = higher zoom level
-            const normalizedZoom = Math.max(0, Math.min(1, (5 - distance) / 4));
+            const normalizedZoom = Math.max(0, Math.min(1, (3 - distance) / 2.5));
             setZoomLevel(normalizedZoom);
           }
         }}

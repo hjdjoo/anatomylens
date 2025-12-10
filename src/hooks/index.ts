@@ -1,3 +1,2 @@
-// Custom hooks will be exported from here
-// Example: useStructureSearch, useModelLoader, etc.
-export {};
+// Custom hooks
+export * from './useAnatomyData';

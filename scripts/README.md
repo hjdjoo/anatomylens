@@ -24,7 +24,7 @@ git clone https://github.com/Z-Anatomy/Models-of-human-anatomy.git
 
 ### Step 2: Open in Blender
 
-1. Open Blender
+1. Follow the instructions at https://github.com/Z-Anatomy/Models-of-human-anatomy.git to install Z-Anatomy Template
 2. Go to **File > Open**
 3. Navigate to the Z-Anatomy folder and open the `.blend` file
 4. Wait for all assets to load (may take a minute)

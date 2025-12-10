@@ -1,6 +1,35 @@
 import { Html } from '@react-three/drei';
 import { useAnatomyStore, useActiveStructureId } from '@/store';
-import { getStructureById, getRenderConfig } from '@/data';
+import torsoMetadata from '@/data/torso_metadata.json';
+
+// Type for metadata structure
+interface StructureMetadata {
+  meshId: string;
+  originalName: string;
+  type: string;
+  layer: number;
+  regions: string[];
+  center: [number, number, number];
+}
+
+// Quick name formatter for mesh IDs
+function formatName(meshId: string): { common: string; anatomical: string } {
+  // Remove suffixes like _j, _i, _1
+  let clean = meshId
+    .replace(/_[jio]$/, '')
+    .replace(/_\d+$/, '')
+    .replace(/_ol$/, '')
+    .replace(/_or$/, '')
+    .replace(/[()]/g, '');
+  
+  // Title case
+  const words = clean.split('_').filter(Boolean);
+  const titleCased = words
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+  
+  return { common: titleCased, anatomical: titleCased };
+}
 
 /**
  * Floating label that appears when hovering over or selecting a structure.
@@ -13,43 +42,22 @@ export function StructureLabel() {
 
   if (!activeId) return null;
 
-  const structure = getStructureById(activeId);
-  const renderConfig = getRenderConfig(activeId);
-
-  if (!structure) return null;
-
-  // Use common name for fitness mode, anatomical name for clinical
-  const displayName = viewMode === 'fitness' 
-    ? structure.commonName 
-    : structure.anatomicalName;
-
-  // Get label position from render config, or use default
-  const labelOffset = renderConfig?.labelAnchorOffset ?? [0, 0.3, 0];
+  // Get structure data from metadata
+  const metadata = torsoMetadata as { structures: Record<string, StructureMetadata> };
+  const structureData = metadata.structures[activeId];
   
-  // Approximate structure position (will be more accurate with real models)
-  const structurePositions: Record<string, [number, number, number]> = {
-    ribcage: [0, 0.2, 0],
-    sternum: [0, 0.2, 0.15],
-    thoracic_vertebrae: [0, 0.25, -0.2],
-    lumbar_vertebrae: [0, -0.2, -0.18],
-    pelvis_bone: [0, -0.5, 0],
-    rectus_abdominis: [0, -0.1, 0.2],
-    external_oblique: [0.25, -0.05, 0.15],
-    internal_oblique: [0.22, -0.05, 0.12],
-    transversus_abdominis: [0, -0.1, 0.08],
-    pectoralis_major: [0.18, 0.35, 0.18],
-    serratus_anterior: [0.35, 0.15, 0.1],
-    intercostals: [0.2, 0.2, 0.1],
-    erector_spinae: [0, 0, -0.25],
-    latissimus_dorsi: [0.3, 0.1, -0.15],
-    diaphragm: [0, 0.05, 0],
-  };
+  if (!structureData) return null;
 
-  const basePosition = structurePositions[activeId] ?? [0, 0, 0];
+  const names = formatName(activeId);
+  
+  // Use common name for fitness mode, anatomical name for clinical
+  const displayName = viewMode === 'fitness' ? names.common : names.anatomical;
+
+  // Use the center from metadata for label position
   const position: [number, number, number] = [
-    basePosition[0] + labelOffset[0],
-    basePosition[1] + labelOffset[1] + 0.15,
-    basePosition[2] + labelOffset[2],
+    structureData.center[0],
+    structureData.center[1] + 0.05,
+    structureData.center[2],
   ];
 
   const isSelected = selectedStructureId === activeId;
@@ -58,7 +66,7 @@ export function StructureLabel() {
     <Html
       position={position}
       center
-      distanceFactor={2}
+      distanceFactor={1.5}
       style={{
         pointerEvents: 'none',
         userSelect: 'none',
@@ -81,27 +89,22 @@ export function StructureLabel() {
           {displayName}
         </span>
         
-        {/* Show secondary name on selection */}
-        {isSelected && viewMode === 'fitness' && structure.anatomicalName !== structure.commonName && (
+        {/* Show regions on selection */}
+        {isSelected && structureData.regions.length > 0 && (
           <span className="block text-xs text-surface-400 mt-0.5">
-            {structure.anatomicalName}
-          </span>
-        )}
-        {isSelected && viewMode === 'clinical' && structure.latinName && (
-          <span className="block text-xs text-surface-400 italic mt-0.5">
-            {structure.latinName}
+            {structureData.regions.join(', ')}
           </span>
         )}
         
         {/* Structure type badge */}
         <span className={`
           inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wide
-          ${structure.type === 'bone' ? 'bg-anatomy-bone/20 text-anatomy-bone' : ''}
-          ${structure.type === 'muscle' ? 'bg-anatomy-muscle/20 text-red-300' : ''}
-          ${structure.type === 'tendon' ? 'bg-anatomy-tendon/20 text-anatomy-tendon' : ''}
-          ${structure.type === 'organ' ? 'bg-anatomy-organ/20 text-pink-300' : ''}
+          ${structureData.type === 'bone' ? 'bg-anatomy-bone/20 text-anatomy-bone' : ''}
+          ${structureData.type === 'muscle' ? 'bg-anatomy-muscle/20 text-red-300' : ''}
+          ${structureData.type === 'tendon' ? 'bg-anatomy-tendon/20 text-anatomy-tendon' : ''}
+          ${structureData.type === 'organ' ? 'bg-anatomy-organ/20 text-pink-300' : ''}
         `}>
-          {structure.type}
+          {structureData.type}
         </span>
       </div>
     </Html>
