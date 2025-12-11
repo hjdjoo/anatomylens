@@ -81,6 +81,9 @@ const EXCLUDE_NAME_PATTERNS = [
   'pronator_quadratus', 'pronator_teres', 'supinator',
   'oblique_cord',
 
+  // Foot structures (matched "quadratus" too broadly)
+  'plantae',
+
   // Leg structures below pelvis
   'popliteal', 'femoris', 'tibial', 'fibular', 'peroneal',
   'gastrocnemius', 'soleus', 'plantaris',
@@ -91,15 +94,15 @@ const EXCLUDE_NAME_PATTERNS = [
 
 // Z-Anatomy uses various suffix patterns for different visualization layers.
 // Many of these have broken transforms (rotated 180°, wrong position).
-// We only want to keep the "clean" structures:
-//   - Base name: muscle_name
-//   - Simple duplicate: muscle_name_1
-// 
-// Patterns to EXCLUDE (have broken transforms):
+// Primary filtering is done in Blender export, but we keep this as a safety net.
+//
+// Patterns to EXCLUDE (have broken transforms or data quality issues):
+//   - _i (geometry data at origin instead of correct position)
 //   - _ol, _or (outline left/right)
-//   - _el, _er (external left/right) - SOME work but many don't
+//   - _el, _er (external left/right)
 //   - _o1l, _o2r, _e19l etc. (numbered layer variants)
 const EXCLUDE_SUFFIX_PATTERNS = [
+  /_i$/i,          // Broken geometry position (data at origin)
   /_o\d*[lr]$/i,   // _ol, _or, _o1l, _o2r, _o19l, etc.
   /_e\d+[lr]$/i,   // _e1l, _e2r, _e19l, etc. (numbered e variants)
   /_el$/i,         // _el (even unnumbered - many are broken)
@@ -166,9 +169,8 @@ function StructureMesh({ mesh, metadata }: StructureMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Current animated values for smooth transitions
+  // Current animated opacity for smooth transitions
   const animatedOpacity = useRef(1);
-  const animatedOffset = useRef(0);
 
   const {
     hoveredStructureId,
@@ -196,18 +198,16 @@ function StructureMesh({ mesh, metadata }: StructureMeshProps) {
   const isTypeVisible = layerVisibility[visibilityKey];
 
   // Depth peeling logic
-  // Layer values: 0=deep (bones), 1=deep muscles, 2=intermediate, 3=superficial
-  // peelDepth: 0=show all, 1=hide layer 3, 2=hide layers 2-3, 3=hide layers 1-3
   const maxVisibleLayer = 3 - peelDepth;
   const isPeeled = metadata.layer > maxVisibleLayer;
 
-  // Search matches override peeling - always show search results
+  // Search matches override peeling
   const shouldPeel = isPeeled && !matchesSearch;
 
   // Target opacity based on peel state
   const targetOpacity = shouldPeel ? 0 : (metadata.type === 'bone' ? 1 : 0.9);
 
-  // Create material
+  // Create material once
   const material = useMemo(() => {
     return new THREE.MeshStandardMaterial({
       color: colors.default,
@@ -220,51 +220,35 @@ function StructureMesh({ mesh, metadata }: StructureMeshProps) {
     });
   }, [colors.default, metadata.type]);
 
-  // Animate color, opacity, and position
+  // Animate color and opacity
   useFrame(() => {
-    if (materialRef.current) {
-      // Animate color - use special highlight for search matches
-      let targetColor = colors.default;
-      if (matchesSearch) {
-        targetColor = '#FFD700'; // Gold for search matches
-      } else if (isHighlighted && !shouldPeel) {
-        targetColor = colors.highlight;
-      }
-      materialRef.current.color.lerp(new THREE.Color(targetColor), 0.1);
+    if (!materialRef.current) return;
 
-      // Animate opacity for peel effect
-      animatedOpacity.current += (targetOpacity - animatedOpacity.current) * 0.08;
-      materialRef.current.opacity = animatedOpacity.current;
-
-      // Disable depth write when fading out to prevent z-fighting
-      materialRef.current.depthWrite = animatedOpacity.current > 0.5;
+    // Animate color
+    let targetColor = colors.default;
+    if (matchesSearch) {
+      targetColor = '#FFD700';
+    } else if (isHighlighted && !shouldPeel) {
+      targetColor = colors.highlight;
     }
+    materialRef.current.color.lerp(new THREE.Color(targetColor), 0.1);
 
-    // Animate outward offset when peeling
-    if (meshRef.current) {
-      const targetOffset = shouldPeel ? 0.05 : 0; // Slight outward movement when peeled
-      animatedOffset.current += (targetOffset - animatedOffset.current) * 0.08;
-
-      // Apply offset along the structure's outward direction (simplified: just Z offset)
-      // In a more sophisticated version, this would use the mesh normal
-      meshRef.current.position.z = mesh.position.z + animatedOffset.current;
-    }
+    // Animate opacity
+    animatedOpacity.current += (targetOpacity - animatedOpacity.current) * 0.08;
+    materialRef.current.opacity = animatedOpacity.current;
+    materialRef.current.depthWrite = animatedOpacity.current > 0.5;
   });
 
-  // Don't render if type is hidden OR if fully peeled (opacity near 0)
+  // Don't render if type is hidden
   if (!isTypeVisible) return null;
 
-  // Keep rendering during animation, but skip interaction when mostly invisible
   const isInteractive = animatedOpacity.current > 0.1;
 
+  // Geometry is already in world space (transforms baked in), so render at origin
   return (
     <mesh
       ref={meshRef}
       geometry={mesh.geometry}
-      position={mesh.position}
-      rotation={mesh.rotation}
-      scale={mesh.scale}
-      // Disable raycasting when peeled so inner layers can be hovered
       raycast={isInteractive ? undefined : () => { }}
       onPointerOver={(e) => {
         if (!isInteractive) return;
@@ -308,6 +292,9 @@ export function AnatomyModelGLTF() {
     const entries: Array<{ mesh: THREE.Mesh; metadata: StructureMetadata }> = [];
     let skippedByTypeOrName = 0;
 
+    // First, update the world matrices for the entire scene
+    scene.updateMatrixWorld(true);
+
     scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         // Try to find matching metadata
@@ -321,11 +308,17 @@ export function AnatomyModelGLTF() {
             return;
           }
 
-          // Position filtering disabled - suffix filtering handles bad meshes
-          // if (!isInTorsoBounds(structureData)) { ... }
+          // Clone the geometry and apply the world transform
+          // This bakes all parent transforms into the vertex data
+          const clonedGeometry = child.geometry.clone();
+          clonedGeometry.applyMatrix4(child.matrixWorld);
+
+          // Create a new mesh with the transformed geometry at origin
+          const newMesh = new THREE.Mesh(clonedGeometry);
+          newMesh.name = child.name;
 
           entries.push({
-            mesh: child,
+            mesh: newMesh,
             metadata: structureData,
           });
         } else {
@@ -352,16 +345,11 @@ export function AnatomyModelGLTF() {
 
     const box = new THREE.Box3();
     meshEntries.forEach(({ mesh }) => {
-      if (mesh.name.includes("inguinal_ligament")) {
-        console.log(`${mesh.name} position [x, y, z]: [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`)
-      }
       const meshBox = new THREE.Box3().setFromObject(mesh);
-
       box.union(meshBox);
     });
 
     const center = box.getCenter(new THREE.Vector3());
-    console.log(`Model center: (${center.x.toFixed(3)}, ${center.y.toFixed(3)}, ${center.z.toFixed(3)})`);
     return center;
   }, [meshEntries]);
 

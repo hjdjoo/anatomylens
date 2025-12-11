@@ -18,7 +18,6 @@ Requirements:
 import bpy
 import json
 import os
-from mathutils import Vector
 from typing import Dict, List, Any
 
 # ============================================================
@@ -100,6 +99,7 @@ EXCLUDE_PATTERNS = [
     "knee", "patella",
     "calf", "crural",
     "foot", "tarsal", "metatarsal",
+    "plantae",  # Foot muscles (quadratus_plantae matched "quadratus" incorrectly)
     "head", "cranial", "cranium",
     "face", "facial",
     "neck", "cervical",  # Neck is debatable, excluding for MVP
@@ -113,6 +113,14 @@ EXCLUDE_PATTERNS = [
     "brain", "cerebr",
     "shoulder", "scapula", "clavicle",  # Excluding for cleaner torso
     "humerus",
+]
+
+# Suffix patterns to exclude (Z-Anatomy variants with broken transforms/data)
+# Note: We considered excluding _i suffix but it's used too broadly in Z-Anatomy.
+# Instead, we rely on validate_structure_center() to flag suspicious structures.
+EXCLUDE_SUFFIX_PATTERNS = [
+    "_ol", "_or",  # Outline variants with transform issues
+    "_el", "_er",  # External variants with transform issues
 ]
 
 # ============================================================
@@ -146,6 +154,40 @@ def matches_pattern(name: str, patterns: List[str]) -> bool:
     """Check if a name matches any of the given patterns."""
     name_lower = name.lower()
     return any(pattern in name_lower for pattern in patterns)
+
+
+def has_excluded_suffix(name: str) -> bool:
+    """Check if a name ends with an excluded suffix pattern."""
+    name_lower = name.lower()
+    for suffix in EXCLUDE_SUFFIX_PATTERNS:
+        if name_lower.endswith(suffix):
+            return True
+    return False
+
+
+def validate_structure_center(name: str, center: List[float], struct_type: str) -> bool:
+    """
+    Validate that a structure's center is plausible.
+    Returns True if valid, False if suspicious.
+    
+    Center is in Y-up coordinates: [X, Y, Z] where Y is height.
+    
+    Structures with centers very close to world origin [0,0,0] are likely
+    broken (geometry data error in source file).
+    """
+    # Calculate distance from origin
+    dist_from_origin = (center[0]**2 + center[1]**2 + center[2]**2) ** 0.5
+    
+    # Bones and muscles should not be centered at the origin
+    # (except possibly for structures that genuinely span the midline at Y=0,
+    # but those are rare and would have larger X or Z values)
+    if dist_from_origin < 0.05:  # Within 5cm of origin
+        # Check if it's a midline structure (X and Z near 0 is ok if Y is reasonable)
+        if abs(center[1]) < 0.1:  # Y (height) also near 0 - suspicious
+            print(f"  WARNING: {name} has suspicious center near origin: {center}")
+            return False
+    
+    return True
 
 
 def get_structure_type(obj: bpy.types.Object) -> str:
@@ -241,42 +283,28 @@ def get_regions(obj: bpy.types.Object) -> List[str]:
 
 
 def get_object_center(obj: bpy.types.Object) -> List[float]:
-    """Get the world-space center of an object's mesh vertices.
+    """Get the world-space center of an object.
     
-    Returns coordinates in Blender's native system (Z-up):
-    [X, Y, Z] where X=right/left, Y=front/back, Z=up/down
+    After fix_object_transforms() has been called, the object's location
+    IS the geometry center, so we can just return that.
     
-    The TypeScript side will handle any coordinate system matching.
+    Returns coordinates converted to Y-up system (for Three.js compatibility):
+    - Blender X → Three.js X
+    - Blender Y → Three.js -Z  
+    - Blender Z → Three.js Y
+    
+    This matches what the glTF exporter does with export_yup=True.
     """
-    try:
-        # Get the evaluated mesh (applies modifiers)
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        eval_obj = obj.evaluated_get(depsgraph)
-        mesh = eval_obj.to_mesh()
-        
-        if not mesh or len(mesh.vertices) == 0:
-            # Fallback to object location if no vertices
-            loc = obj.matrix_world.translation
-            return [round(loc.x, 4), round(loc.y, 4), round(loc.z, 4)]
-        
-        # Transform all vertices to world space and find center
-        world_matrix = obj.matrix_world
-        world_verts = [world_matrix @ v.co for v in mesh.vertices]
-        
-        # Calculate centroid (average of all vertex positions)
-        centroid = sum(world_verts, Vector()) / len(world_verts)
-        
-        # Clean up the temporary mesh
-        eval_obj.to_mesh_clear()
-        
-        # Return raw Blender coordinates [X, Y, Z] (Z-up)
-        return [round(centroid.x, 4), round(centroid.y, 4), round(centroid.z, 4)]
+    loc = obj.matrix_world.translation
     
-    except Exception as e:
-        # Fallback to object location on any error
-        print(f"Warning: Could not calculate center for {obj.name}: {e}")
-        loc = obj.matrix_world.translation
-        return [round(loc.x, 4), round(loc.y, 4), round(loc.z, 4)]
+    # Convert from Blender Z-up to Three.js Y-up
+    # Blender: [X, Y, Z] where Z is up
+    # Three.js: [X, Y, Z] where Y is up
+    x_threejs = loc.x
+    y_threejs = loc.z      # Blender Z becomes Three.js Y
+    z_threejs = -loc.y     # Blender Y becomes Three.js -Z
+    
+    return [round(x_threejs, 4), round(y_threejs, 4), round(z_threejs, 4)]
 
 
 # ============================================================
@@ -290,17 +318,33 @@ def find_torso_objects() -> List[bpy.types.Object]:
     # Get objects in the current view layer (only these can be selected/exported)
     view_layer_objects = {obj.name for obj in bpy.context.view_layer.objects}
     
+    # Counters for logging
+    total_meshes = 0
+    skipped_not_in_view = 0
+    skipped_exclude_pattern = 0
+    skipped_exclude_suffix = 0
+    skipped_no_torso_match = 0
+    
     for obj in bpy.data.objects:
         # Only process mesh objects
         if obj.type != 'MESH':
             continue
         
+        total_meshes += 1
+        
         # Skip objects not in current view layer (can't be selected for export)
         if obj.name not in view_layer_objects:
+            skipped_not_in_view += 1
             continue
         
         # Skip if it matches exclude patterns
         if matches_pattern(obj.name, EXCLUDE_PATTERNS):
+            skipped_exclude_pattern += 1
+            continue
+        
+        # Skip if it has an excluded suffix (broken transforms/data)
+        if has_excluded_suffix(obj.name):
+            skipped_exclude_suffix += 1
             continue
         
         # Include if it matches torso patterns
@@ -309,13 +353,86 @@ def find_torso_objects() -> List[bpy.types.Object]:
             continue
         
         # Also check collection names
+        matched_collection = False
         for collection in obj.users_collection:
             if matches_pattern(collection.name, TORSO_PATTERNS):
                 if not matches_pattern(obj.name, EXCLUDE_PATTERNS):
                     torso_objects.append(obj)
+                    matched_collection = True
                 break
+        
+        if not matched_collection:
+            skipped_no_torso_match += 1
+    
+    # Print filtering summary
+    print(f"\nFiltering summary:")
+    print(f"  Total meshes in scene: {total_meshes}")
+    print(f"  Skipped (not in view layer): {skipped_not_in_view}")
+    print(f"  Skipped (exclude pattern): {skipped_exclude_pattern}")
+    print(f"  Skipped (exclude suffix): {skipped_exclude_suffix}")
+    print(f"  Skipped (no torso match): {skipped_no_torso_match}")
+    print(f"  Included: {len(torso_objects)}")
     
     return torso_objects
+
+
+def fix_object_transforms(objects: List[bpy.types.Object]) -> List[bpy.types.Object]:
+    """
+    Fix object transforms so that mesh.position in Three.js matches geometry center.
+    
+    The order matters:
+    1. Apply all transforms - bakes location/rotation/scale into vertex data
+    2. Set origin to geometry center - moves origin to where vertices actually are
+    
+    After this:
+    - Object's location = geometry center (what Three.js sees as mesh.position)
+    - Vertex data = relative to that center
+    
+    Returns list of all objects (includes objects where transform fix failed).
+    """
+    print("\nFixing object transforms...")
+    
+    # Deselect all first
+    bpy.ops.object.select_all(action='DESELECT')
+    
+    valid_objects = []
+    fixed_count = 0
+    failed_count = 0
+    view_layer_objects = {obj.name for obj in bpy.context.view_layer.objects}
+    
+    for obj in objects:
+        if obj.name not in view_layer_objects:
+            print(f"  WARNING: {obj.name} not in view layer, including without transform fix")
+            valid_objects.append(obj)  # Still include it
+            failed_count += 1
+            continue
+        
+        try:
+            # Select only this object
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+            
+            # Step 1: Apply all transforms first
+            # This bakes location/rotation/scale into the vertex data
+            # After this, vertices are in world space and object transform is identity
+            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+            
+            # Step 2: Set origin to geometry center
+            # This moves the origin point to where the vertices actually are
+            # The object's location will now equal the geometry center
+            bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_VOLUME', center='MEDIAN')
+            
+            valid_objects.append(obj)
+            fixed_count += 1
+            
+        except Exception as e:
+            print(f"  WARNING: Could not fix transforms for {obj.name}: {e}")
+            valid_objects.append(obj)  # Still include it even if transform fix failed
+            failed_count += 1
+    
+    print(f"  Transform results: {fixed_count} fixed, {failed_count} failed (still included)")
+    return valid_objects
 
 
 def prepare_export_objects(objects: List[bpy.types.Object]) -> Dict[str, Any]:
@@ -332,6 +449,7 @@ def prepare_export_objects(objects: List[bpy.types.Object]) -> Dict[str, Any]:
     
     # Track mesh IDs to handle duplicates
     used_ids = set()
+    skipped_validation = 0
     
     for obj in objects:
         # Generate clean mesh ID
@@ -349,14 +467,24 @@ def prepare_export_objects(objects: List[bpy.types.Object]) -> Dict[str, Any]:
         
         # Gather metadata
         struct_type = get_structure_type(obj)
+        center = get_object_center(obj)
+        
+        # Validate the center position
+        if not validate_structure_center(mesh_id, center, struct_type):
+            skipped_validation += 1
+            # Still include it but log the warning (already printed in validate function)
+        
         metadata["structures"][mesh_id] = {
             "meshId": mesh_id,
             "originalName": original_name,
             "type": struct_type,
             "layer": estimate_layer(obj, struct_type),
             "regions": get_regions(obj),
-            "center": get_object_center(obj),
+            "center": center,
         }
+    
+    if skipped_validation > 0:
+        print(f"\n  NOTE: {skipped_validation} structures have suspicious centers (see warnings above)")
     
     return metadata
 
@@ -443,13 +571,21 @@ def main():
         print(f"  - {obj.name}")
     print()
     
+    # Fix transforms BEFORE preparing metadata
+    # This ensures mesh.position in Three.js matches the geometry center
+    torso_objects = fix_object_transforms(torso_objects)
+    
+    if not torso_objects:
+        print("ERROR: No valid objects after transform fixing!")
+        return
+    
     # Prepare objects and generate metadata
-    print("Preparing export...")
+    print("\nPreparing export...")
     metadata = prepare_export_objects(torso_objects)
     
     # Export glTF
     gltf_path = os.path.join(OUTPUT_DIR, GLTF_FILENAME)
-    print(f"Exporting glTF to {gltf_path}...")
+    print(f"\nExporting glTF to {gltf_path}...")
     export_gltf(torso_objects, gltf_path)
     
     # Export metadata
