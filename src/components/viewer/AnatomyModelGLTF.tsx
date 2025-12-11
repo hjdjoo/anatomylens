@@ -352,7 +352,11 @@ export function AnatomyModelGLTF() {
 
     const box = new THREE.Box3();
     meshEntries.forEach(({ mesh }) => {
+      if (mesh.name.includes("inguinal_ligament")) {
+        console.log(`${mesh.name} position [x, y, z]: [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`)
+      }
       const meshBox = new THREE.Box3().setFromObject(mesh);
+
       box.union(meshBox);
     });
 
