@@ -4,7 +4,6 @@ import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import { useAnatomyStore } from '@/store';
 import { AnatomyModelGLTF } from './AnatomyModelGLTF';
 import { LoadingIndicator } from './LoadingIndicator';
-import { StructureLabel } from './StructureLabel';
 
 // Set to true to use placeholder geometry, false for real GLTF model
 
@@ -62,7 +61,6 @@ export function AnatomyCanvas() {
       {/* Main content with loading fallback */}
       <Suspense fallback={<LoadingIndicator />}>
         <AnatomyModelGLTF />
-        <StructureLabel />
       </Suspense>
 
       {/* Camera controls */}

@@ -1,5 +1,5 @@
 import { useAnatomyStore } from '@/store';
-import torsoMetadata from '@/data/torso_metadata.json';
+import torsoMetadata from "@/data/torso_metadata.json"
 
 // Type for metadata structure
 interface StructureMetadata {
@@ -44,6 +44,8 @@ export function InfoPanel() {
   // Get structure from metadata
   const metadata = JSON.parse(JSON.stringify(torsoMetadata)) as { structures: Record<string, StructureMetadata> };
   const structure = selectedStructureId ? metadata.structures[selectedStructureId] : null;
+
+  // console.log(structure);
 
   if (!infoPanelOpen || !structure) return null;
 

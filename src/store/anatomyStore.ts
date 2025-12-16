@@ -108,6 +108,7 @@ const defaultLayerVisibility: LayerVisibility = {
   muscles: true,
   tendons: true,
   ligaments: true,
+  fascia: false,  // Off by default since it covers muscles
   organs: true,
 };
 
@@ -174,6 +175,7 @@ export const useAnatomyStore = create<AnatomyStore>()(
         muscles: true,
         tendons: true,
         ligaments: true,
+        fascia: true,
         organs: true,
       },
     }),
@@ -184,6 +186,7 @@ export const useAnatomyStore = create<AnatomyStore>()(
         muscles: false,
         tendons: false,
         ligaments: false,
+        fascia: false,
         organs: false,
       },
     }),

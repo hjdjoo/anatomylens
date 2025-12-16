@@ -9,6 +9,21 @@ import type { LayerVisibility } from '@/types';
 import torsoMetadata from '@/data/torso_metadata.json';
 
 // ============================================================
+// DEBUG CONFIGURATION
+// ============================================================
+
+// Set to true to enable debugging output for specific structures
+const DEBUG_ENABLED = true;
+const DEBUG_STRUCTURES = ['inguinal_ligament', 'inguinal_ligament_1'];
+
+function debugLog(meshName: string, message: string, data?: unknown) {
+  if (!DEBUG_ENABLED) return;
+  if (!DEBUG_STRUCTURES.some(s => meshName.toLowerCase().includes(s.toLowerCase()))) return;
+
+  console.log(`[DEBUG ${meshName}] ${message}`, data ?? '');
+}
+
+// ============================================================
 // TYPES
 // ============================================================
 
@@ -26,6 +41,13 @@ interface MetadataFile {
   source: string;
   region: string;
   structures: Record<string, StructureMetadata>;
+}
+
+// Extended metadata with computed center
+interface ProcessedStructure {
+  mesh: THREE.Mesh;
+  metadata: StructureMetadata;
+  computedCenter: THREE.Vector3; // Computed from actual geometry
 }
 
 // ============================================================
@@ -58,15 +80,6 @@ const TYPE_TO_VISIBILITY_KEY: Record<string, keyof LayerVisibility> = {
 // STRUCTURE FILTERING
 // ============================================================
 
-// Bounding box for valid torso structures
-// Metadata is in Blender coordinates: [X, Y, Z] where Z is height (up/down)
-// const TORSO_BOUNDS = {
-//   minX: -0.20,  // Left boundary
-//   maxX: 0.20,   // Right boundary  
-//   minZ: 0.70,   // Bottom height (pelvis) - note: Z is height in Blender coords
-//   maxZ: 1.50,   // Top height (below neck)
-// };
-
 // Patterns that indicate non-anatomical or non-torso structures
 const EXCLUDE_NAME_PATTERNS = [
   // Reference planes and movement terms (teaching aids, not anatomy)
@@ -92,15 +105,7 @@ const EXCLUDE_NAME_PATTERNS = [
   'lymph_node',
 ];
 
-// Z-Anatomy uses various suffix patterns for different visualization layers.
-// Many of these have broken transforms (rotated 180°, wrong position).
-// Primary filtering is done in Blender export, but we keep this as a safety net.
-//
-// Patterns to EXCLUDE (have broken transforms or data quality issues):
-//   - _i (geometry data at origin instead of correct position)
-//   - _ol, _or (outline left/right)
-//   - _el, _er (external left/right)
-//   - _o1l, _o2r, _e19l etc. (numbered layer variants)
+// Z-Anatomy suffix patterns to exclude
 const EXCLUDE_SUFFIX_PATTERNS = [
   /_i$/i,          // Broken geometry position (data at origin)
   /_o\d*[lr]$/i,   // _ol, _or, _o1l, _o2r, _o19l, etc.
@@ -114,22 +119,18 @@ const EXCLUDE_TYPES = ['organ'];
 
 /**
  * Determine if a structure should be rendered based on type and name.
- * Only renders "clean" structures without problematic Z-Anatomy suffixes.
  */
 function shouldRenderByTypeAndName(metadata: StructureMetadata): boolean {
-  // Exclude certain types entirely (like organs)
   if (EXCLUDE_TYPES.includes(metadata.type)) {
     return false;
   }
 
   const nameLower = metadata.meshId.toLowerCase();
 
-  // Check name patterns
   if (EXCLUDE_NAME_PATTERNS.some(pattern => nameLower.includes(pattern))) {
     return false;
   }
 
-  // Check suffix patterns (Z-Anatomy layer variants with broken transforms)
   if (EXCLUDE_SUFFIX_PATTERNS.some(pattern => pattern.test(metadata.meshId))) {
     return false;
   }
@@ -137,34 +138,110 @@ function shouldRenderByTypeAndName(metadata: StructureMetadata): boolean {
   return true;
 }
 
+// ============================================================
+// CENTER COMPUTATION - CLEAN IMPLEMENTATION
+// ============================================================
+
 /**
- * Check if a structure is within torso bounds based on metadata center.
- * Metadata center is in Blender coordinates: [X, Y, Z] where Z is height
+ * Compute the world-space center of a mesh's geometry.
+ * 
+ * This is the SINGLE SOURCE OF TRUTH for mesh centers.
+ * It computes the center from the actual vertex data after applying
+ * all world transforms, making it immune to:
+ * - Parent-child hierarchy issues in glTF
+ * - Coordinate system mismatches between Blender and Three.js
+ * - Metadata errors from the export process
+ * 
+ * @param geometry - The mesh geometry
+ * @param worldMatrix - The world transform matrix to apply
+ * @returns The center point in world coordinates
  */
-// function isInTorsoBounds(metadata: StructureMetadata): boolean {
-//   const [x, , z] = metadata.center; // X = left/right, Z = height (Blender Z-up)
+function computeGeometryCenter(
+  geometry: THREE.BufferGeometry,
+  worldMatrix: THREE.Matrix4
+): THREE.Vector3 {
+  // Clone geometry so we don't mutate the original
+  const tempGeometry = geometry.clone();
 
-//   if (x < TORSO_BOUNDS.minX || x > TORSO_BOUNDS.maxX) {
-//     return false;
-//   }
+  // Apply world transform to get vertices in world space
+  tempGeometry.applyMatrix4(worldMatrix);
 
-//   if (z < TORSO_BOUNDS.minZ || z > TORSO_BOUNDS.maxZ) {
-//     return false;
-//   }
+  // Compute bounding box from transformed vertices
+  tempGeometry.computeBoundingBox();
 
-//   return true;
-// }
+  if (!tempGeometry.boundingBox) {
+    console.warn('Could not compute bounding box for geometry');
+    return new THREE.Vector3();
+  }
+
+  // Get center of bounding box
+  const center = new THREE.Vector3();
+  tempGeometry.boundingBox.getCenter(center);
+
+  // Clean up
+  tempGeometry.dispose();
+
+  return center;
+}
+
+/**
+ * Process a mesh from the glTF scene:
+ * 1. Clone geometry
+ * 2. Apply world transforms to vertex data
+ * 3. Compute center from transformed geometry
+ * 
+ * This ensures the mesh renders correctly at origin with all transforms baked in,
+ * and we have an accurate center for UI/camera purposes.
+ */
+function processGLTFMesh(
+  child: THREE.Mesh,
+  metadata: StructureMetadata
+): ProcessedStructure {
+  debugLog(child.name, 'Processing mesh');
+  debugLog(child.name, 'Local position:', child.position.toArray());
+  debugLog(child.name, 'World matrix:', child.matrixWorld.toArray());
+
+  // Step 1: Compute center BEFORE cloning/transforming
+  // We need the world matrix to transform the geometry center
+  const computedCenter = computeGeometryCenter(child.geometry, child.matrixWorld);
+
+  debugLog(child.name, 'Metadata center:', metadata.center);
+  debugLog(child.name, 'Computed center:', computedCenter.toArray());
+
+  // Check for significant mismatch
+  const metadataVec = new THREE.Vector3(...metadata.center);
+  const distance = computedCenter.distanceTo(metadataVec);
+  if (distance > 0.05) { // More than 5cm difference
+    debugLog(child.name, `⚠️ CENTER MISMATCH: ${distance.toFixed(4)} units difference`);
+  }
+
+  // Step 2: Clone geometry and bake world transform into vertices
+  const clonedGeometry = child.geometry.clone();
+  clonedGeometry.applyMatrix4(child.matrixWorld);
+
+  // Step 3: Create new mesh at origin (transform is baked into vertices)
+  const newMesh = new THREE.Mesh(clonedGeometry);
+  newMesh.name = child.name;
+
+  debugLog(child.name, 'Processing complete ✓');
+
+  return {
+    mesh: newMesh,
+    metadata,
+    computedCenter,
+  };
+}
 
 // ============================================================
 // STRUCTURE MESH COMPONENT
 // ============================================================
 
 interface StructureMeshProps {
-  mesh: THREE.Mesh;
-  metadata: StructureMetadata;
+  structure: ProcessedStructure;
 }
 
-function StructureMesh({ mesh, metadata }: StructureMeshProps) {
+function StructureMesh({ structure }: StructureMeshProps) {
+  const { mesh, metadata, computedCenter } = structure;
   const materialRef = useRef<THREE.MeshStandardMaterial>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -244,6 +321,16 @@ function StructureMesh({ mesh, metadata }: StructureMeshProps) {
 
   const isInteractive = animatedOpacity.current > 0.1;
 
+  // Debug: Log when selected
+  useEffect(() => {
+    if (isSelected) {
+      debugLog(metadata.meshId, 'SELECTED - Center info:', {
+        metadataCenter: metadata.center,
+        computedCenter: computedCenter.toArray(),
+      });
+    }
+  }, [isSelected, metadata.meshId, metadata.center, computedCenter]);
+
   // Geometry is already in world space (transforms baked in), so render at origin
   return (
     <mesh
@@ -287,17 +374,23 @@ export function AnatomyModelGLTF() {
   // Parse metadata
   const metadata = JSON.parse(JSON.stringify(torsoMetadata)) as MetadataFile;
 
-  // Extract meshes and match with metadata
-  const meshEntries = useMemo(() => {
-    const entries: Array<{ mesh: THREE.Mesh; metadata: StructureMetadata }> = [];
+  // Extract meshes, apply transforms, and compute centers
+  const processedStructures = useMemo(() => {
+    const structures: ProcessedStructure[] = [];
     let skippedByTypeOrName = 0;
 
-    // First, update the world matrices for the entire scene
+    // CRITICAL: Update world matrices for the entire scene hierarchy
+    // This ensures child meshes have correct matrixWorld values
     scene.updateMatrixWorld(true);
+
+    if (DEBUG_ENABLED) {
+      console.log('='.repeat(60));
+      console.log('[DEBUG] Processing anatomy model...');
+      console.log('='.repeat(60));
+    }
 
     scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        // Try to find matching metadata
         const meshName = child.name;
         const structureData = metadata.structures[meshName];
 
@@ -308,19 +401,9 @@ export function AnatomyModelGLTF() {
             return;
           }
 
-          // Clone the geometry and apply the world transform
-          // This bakes all parent transforms into the vertex data
-          const clonedGeometry = child.geometry.clone();
-          clonedGeometry.applyMatrix4(child.matrixWorld);
-
-          // Create a new mesh with the transformed geometry at origin
-          const newMesh = new THREE.Mesh(clonedGeometry);
-          newMesh.name = child.name;
-
-          entries.push({
-            mesh: newMesh,
-            metadata: structureData,
-          });
+          // Process the mesh and compute center
+          const processed = processGLTFMesh(child, structureData);
+          structures.push(processed);
         } else {
           // Log unmatched meshes for debugging
           console.debug(`No metadata for mesh: ${meshName}`);
@@ -328,8 +411,15 @@ export function AnatomyModelGLTF() {
       }
     });
 
-    console.log(`Loaded ${entries.length} structures (filtered out ${skippedByTypeOrName} by type/name/suffix)`);
-    return entries;
+    console.log(`Loaded ${structures.length} structures (filtered out ${skippedByTypeOrName} by type/name/suffix)`);
+
+    if (DEBUG_ENABLED) {
+      console.log('='.repeat(60));
+      console.log('[DEBUG] Processing complete');
+      console.log('='.repeat(60));
+    }
+
+    return structures;
   }, [scene, metadata]);
 
   // Mark loading complete
@@ -338,20 +428,21 @@ export function AnatomyModelGLTF() {
   }, [setLoading]);
 
   // Calculate model bounds from FILTERED structures only
+  // Uses computed centers for accuracy
   const modelCenter = useMemo(() => {
-    if (meshEntries.length === 0) {
+    if (processedStructures.length === 0) {
       return new THREE.Vector3();
     }
 
     const box = new THREE.Box3();
-    meshEntries.forEach(({ mesh }) => {
+    processedStructures.forEach(({ mesh }) => {
       const meshBox = new THREE.Box3().setFromObject(mesh);
       box.union(meshBox);
     });
 
     const center = box.getCenter(new THREE.Vector3());
     return center;
-  }, [meshEntries]);
+  }, [processedStructures]);
 
   return (
     <group
@@ -364,11 +455,10 @@ export function AnatomyModelGLTF() {
         }
       }}
     >
-      {meshEntries.map(({ mesh, metadata }) => (
+      {processedStructures.map((structure) => (
         <StructureMesh
-          key={metadata.meshId}
-          mesh={mesh}
-          metadata={metadata}
+          key={structure.metadata.meshId}
+          structure={structure}
         />
       ))}
     </group>
