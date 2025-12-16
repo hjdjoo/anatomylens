@@ -297,6 +297,8 @@ def get_object_center(obj: bpy.types.Object) -> List[float]:
     Returns coordinates converted to Y-up system (for Three.js compatibility).
     """
     loc = obj.matrix_world.translation
+
+    print(f"DEBUG {obj.name}: Blender loc=[{loc.x:.4f}, {loc.y:.4f}, {loc.z:.4f}]")
     
     # Convert from Blender Z-up to Three.js Y-up
     x_threejs = loc.x
