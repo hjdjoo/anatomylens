@@ -26,7 +26,11 @@ export function ViewControls() {
     resetPeel,
     searchQuery,
     setSearchQuery,
+    manuallyPeeledIds,
+    resetManualPeels,
   } = useAnatomyStore();
+
+  const manualPeelCount = manuallyPeeledIds.size;
 
   const layers: Array<{ key: keyof LayerVisibility; label: string; color: string }> = [
     { key: 'bones', label: 'Bones', color: 'bg-anatomy-bone' },
@@ -38,7 +42,7 @@ export function ViewControls() {
   ];
 
   return (
-    <div className="absolute left-4 top-4 space-y-3 max-h-[calc(100vh-2rem)] overflow-y-auto">
+    <div className="absolute left-4 top-24 space-y-3 max-h-[calc(100vh-2rem)] overflow-y-auto">
       {/* Search */}
       <div className="bg-surface-900/95 backdrop-blur-xl rounded-xl border border-surface-700/50 p-3 shadow-lg">
         <div className="text-xs font-semibold text-surface-400 uppercase tracking-wide mb-2">
@@ -138,6 +142,26 @@ export function ViewControls() {
             Reset to show all
           </button>
         )}
+
+        {/* Manual peels indicator */}
+        {manualPeelCount > 0 && (
+          <div className="mt-3 pt-3 border-t border-surface-700/50">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-surface-400">
+                {manualPeelCount} structure{manualPeelCount !== 1 ? 's' : ''} hidden
+              </span>
+              <button
+                onClick={resetManualPeels}
+                className="px-2 py-1 text-xs text-accent-400 hover:text-accent-300 transition-colors"
+              >
+                Restore all
+              </button>
+            </div>
+            <p className="text-[10px] text-surface-500 mt-1">
+              Double-click structures to hide/show
+            </p>
+          </div>
+        )}
       </div>
 
       {/* View Mode Toggle */}
@@ -227,11 +251,11 @@ export function ViewControls() {
 
       {/* Keyboard shortcuts hint */}
       <div className="bg-surface-900/80 backdrop-blur-xl rounded-lg border border-surface-700/50 px-3 py-2 text-xs text-surface-500">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-1">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
           </svg>
-          <span>Click structure for details</span>
+          <span>Click to select • Double-click to peel</span>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useAnatomyStore } from '@/store';
 import type { LayerVisibility } from '@/types';
@@ -12,8 +12,8 @@ import torsoMetadata from '@/data/torso_metadata.json';
 // DEBUG CONFIGURATION
 // ============================================================
 
-const DEBUG_ENABLED = false;
-const DEBUG_STRUCTURES = ['inguinal_ligament', 'pubic_ligament'];
+const DEBUG_ENABLED = false;  // Disabled for production
+const DEBUG_STRUCTURES = ['Inguinal'];
 
 function debugLog(meshName: string, message: string, data?: unknown) {
   if (!DEBUG_ENABLED) return;
@@ -28,7 +28,7 @@ function debugLog(meshName: string, message: string, data?: unknown) {
 interface StructureMetadata {
   meshId: string;
   originalName: string;
-  type: 'bone' | 'muscle' | 'organ' | 'tendon' | 'ligament' | 'cartilage' | 'fascia';
+  type: 'bone' | 'muscle' | 'organ' | 'tendon' | 'ligament' | 'cartilage' | 'fascia' | 'other';
   layer: number;
   regions: string[];
   center: [number, number, number];
@@ -73,52 +73,152 @@ const TYPE_TO_VISIBILITY_KEY: Record<string, keyof LayerVisibility> = {
 };
 
 // ============================================================
-// GLTF NAME NORMALIZATION
+// GLTF NAME NORMALIZATION & MATCHING
 // ============================================================
 
 /**
- * Normalize a glTF mesh name to match metadata keys.
+ * Normalize a glTF mesh name to get the base name (without side or numeric suffixes).
  * 
- * glTF exporter adds suffixes like '001', '002' to mesh names.
+ * glTF exporter adds suffixes like '001', '002', '001_1', '002_1' to mesh names.
  * Examples:
- *   - 'inguinal_ligament001' → 'inguinal_ligament'
- *   - 'inguinal_ligament_1001' → 'inguinal_ligament_1'
- *   - 'Hip_bone001' → 'hip_bone'
+ *   - '(Abdominal_part_of_pectoralis_major_muscle)001' -> '(abdominal_part_of_pectoralis_major_muscle)'
+ *   - '(Abdominal_part_of_pectoralis_major_muscle)001_1' -> '(abdominal_part_of_pectoralis_major_muscle)'
+ *   - 'Clavicular_head_of_pectoralis_major_muscle002_1' -> 'clavicular_head_of_pectoralis_major_muscle'
  */
-function normalizeGltfName(gltfName: string): string {
+function normalizeGltfNameToBase(gltfName: string): string {
   return gltfName
-    .replace(/00\d+/g, '')      // Remove Blender's numeric suffixes (001, 002, etc.)
+    .replace(/00\d+(_\d+)?/g, '')  // Remove Blender's numeric suffixes (001, 001_1, 002, 002_1, etc.)
     .toLowerCase()
-    .replace(/__+/g, '_')       // Clean up double underscores
-    .replace(/_+$/, '');        // Remove trailing underscores
+    .replace(/[(\()(\))]/g, '')  // Remove parentheses
+    .replace(/_[lr]$/i, '')        // Remove any existing _l or _r suffix
+    .replace(/__+/g, '_')          // Clean up double underscores
+    .replace(/_+$/, '');           // Remove trailing underscores
 }
 
 /**
- * Find metadata for a glTF mesh.
- * Returns the metadata key and data, or null if not found.
+ * Build a lookup map from base names to their _l/_r variants in metadata.
+ * This enables O(1) matching for bilateral structures.
+ */
+function buildSideLookupMap(
+  structures: Record<string, StructureMetadata>
+): Map<string, { left?: string; right?: string; single?: string }> {
+  const lookup = new Map<string, { left?: string; right?: string; single?: string }>();
+
+  for (const key of Object.keys(structures)) {
+    let baseName: string;
+    let side: 'left' | 'right' | 'single';
+
+    if (key.endsWith('_l')) {
+      baseName = key.slice(0, -2);
+      side = 'left';
+    } else if (key.endsWith('_r')) {
+      baseName = key.slice(0, -2);
+      side = 'right';
+    } else if (key.endsWith('_i')) {
+      // _i suffix typically means "left" in Z-Anatomy joint notation
+      baseName = key.slice(0, -2);
+      side = 'left';
+    } else if (key.endsWith('_j')) {
+      // _j suffix - could be joint or right side, treat as single to avoid collision
+      baseName = key.slice(0, -2);
+      side = 'single';
+    } else {
+      baseName = key;
+      side = 'single';
+    }
+
+    const existing = lookup.get(baseName) || {};
+    if (side === 'left') {
+      existing.left = key;
+    } else if (side === 'right') {
+      existing.right = key;
+    } else {
+      existing.single = key;
+    }
+    lookup.set(baseName, existing);
+  }
+
+  return lookup;
+}
+
+/**
+ * Determine which side (left/right) a mesh is on based on its world position.
+ * In anatomical convention: positive X = left side, negative X = right side
+ */
+function determineSideFromPosition(mesh: THREE.Mesh): 'left' | 'right' | 'center' {
+  const box = new THREE.Box3().setFromObject(mesh);
+  const center = box.getCenter(new THREE.Vector3());
+
+  const threshold = 0.02;
+  if (Math.abs(center.x) < threshold) {
+    return 'center';
+  }
+  return center.x > 0 ? 'left' : 'right';
+}
+
+/**
+ * Find metadata for a glTF mesh using smart matching.
+ * 
+ * Strategy:
+ * 1. Try exact match
+ * 2. Try direct normalized match (for single structures)
+ * 3. For bilateral structures, use position to determine _l/_r variant
  */
 function findMetadataForMesh(
-  gltfName: string,
-  structures: Record<string, StructureMetadata>
+  mesh: THREE.Mesh,
+  structures: Record<string, StructureMetadata>,
+  sideLookup: Map<string, { left?: string; right?: string; single?: string }>
 ): { key: string; data: StructureMetadata } | null {
+  const gltfName = mesh.name;
+
   // Try exact match first
   if (structures[gltfName]) {
-    console.log("metadata found for gltf name: ", gltfName)
     return { key: gltfName, data: structures[gltfName] };
   }
 
-  // Try normalized name
-  const normalized = normalizeGltfName(gltfName);
-  if (structures[normalized]) {
-    console.log("metadata found for normalized gltf name: ", normalized)
-    return { key: normalized, data: structures[normalized] };
+  // Try exact match with lowercase
+  const lowered = gltfName.toLowerCase();
+  if (structures[lowered]) {
+    return { key: lowered, data: structures[lowered] };
   }
 
-  // Try lowercase only
-  // const lowercased = gltfName.toLowerCase();
-  // if (structures[lowercased]) {
-  //   return { key: lowercased, data: structures[lowercased] };
-  // }
+  // Get the base name (without numeric suffixes or side markers)
+  const baseName = normalizeGltfNameToBase(gltfName);
+
+  // Look up in side map
+  const sideVariants = sideLookup.get(baseName);
+  if (!sideVariants) {
+    return null;
+  }
+
+  // If there's only a single (non-sided) version, use it
+  if (sideVariants.single && !sideVariants.left && !sideVariants.right) {
+    return { key: sideVariants.single, data: structures[sideVariants.single] };
+  }
+
+  // If there are sided versions, determine which one based on position
+  if (sideVariants.left || sideVariants.right) {
+    const side = determineSideFromPosition(mesh);
+
+    if (side === 'left' && sideVariants.left) {
+      return { key: sideVariants.left, data: structures[sideVariants.left] };
+    }
+    if (side === 'right' && sideVariants.right) {
+      return { key: sideVariants.right, data: structures[sideVariants.right] };
+    }
+    // Fallback: if center or missing side variant, try any available
+    if (sideVariants.left) {
+      return { key: sideVariants.left, data: structures[sideVariants.left] };
+    }
+    if (sideVariants.right) {
+      return { key: sideVariants.right, data: structures[sideVariants.right] };
+    }
+  }
+
+  // Final fallback: try single
+  if (sideVariants.single) {
+    return { key: sideVariants.single, data: structures[sideVariants.single] };
+  }
 
   return null;
 }
@@ -138,6 +238,7 @@ const EXCLUDE_NAME_PATTERNS = [
 ];
 
 const EXCLUDE_SUFFIX_PATTERNS = [
+  /_j$/i,
   /_i$/i,
   /_o\d*[lr]$/i,
   /_e\d+[lr]$/i,
@@ -166,13 +267,36 @@ function shouldRenderByTypeAndName(metadata: StructureMetadata): boolean {
 }
 
 // ============================================================
-// MESH PROCESSING (SIMPLIFIED - TRUST METADATA)
+// MESH PROCESSING (OPTIMIZED - NO CLONING)
 // ============================================================
 
 /**
+ * Check if a matrix is effectively identity (transforms already baked into vertices).
+ * V10.5 export applies transforms before export, so matrixWorld should be identity.
+ */
+function isIdentityMatrix(matrix: THREE.Matrix4, tolerance = 0.0001): boolean {
+  const elements = matrix.elements;
+  // Identity matrix: diagonal = 1, off-diagonal = 0
+  const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+  for (let i = 0; i < 16; i++) {
+    if (Math.abs(elements[i] - identity[i]) > tolerance) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Track if we've logged the transform status (once per session)
+let hasLoggedTransformStatus = false;
+
+/**
  * Process a mesh from the glTF scene.
- * Simply clones geometry with world transforms baked in.
- * Center comes from metadata (trusted from V7 export).
+ * 
+ * OPTIMIZATION: V10.5 export bakes transforms into vertices, so matrixWorld
+ * should be identity. We use the original geometry directly instead of cloning,
+ * reducing memory usage by ~50%.
+ * 
+ * Center comes from metadata (trusted from V10.5 export).
  */
 function processGLTFMesh(
   child: THREE.Mesh,
@@ -181,22 +305,40 @@ function processGLTFMesh(
 ): ProcessedStructure {
   debugLog(child.name, 'Processing mesh');
 
-  // Clone geometry and bake world transform into vertices
-  const clonedGeometry = child.geometry.clone();
-  clonedGeometry.applyMatrix4(child.matrixWorld);
+  const hasIdentityTransform = isIdentityMatrix(child.matrixWorld);
 
-  // Create new mesh at origin (transform is baked into vertices)
-  const newMesh = new THREE.Mesh(clonedGeometry);
-  newMesh.name = child.name;
+  // Log transform status once to help diagnose issues
+  if (!hasLoggedTransformStatus && DEBUG_ENABLED) {
+    hasLoggedTransformStatus = true;
+    if (hasIdentityTransform) {
+      console.log('[MEMORY] ✓ Transforms are baked - using geometry directly (no cloning)');
+    } else {
+      console.log('[MEMORY] ⚠ Transforms not baked - falling back to cloning');
+      console.log('  First mesh matrixWorld:', child.matrixWorld.elements);
+    }
+  }
 
-  // Use center from metadata (V7 export computed this correctly)
+  let geometry: THREE.BufferGeometry;
+
+  if (hasIdentityTransform) {
+    // OPTIMIZED PATH: Use geometry directly (no clone needed)
+    // This saves ~100MB by avoiding geometry duplication
+    geometry = child.geometry;
+  } else {
+    // FALLBACK PATH: Clone and bake transform (legacy behavior)
+    // This shouldn't happen with V10.5 exports
+    geometry = child.geometry.clone();
+    geometry.applyMatrix4(child.matrixWorld);
+  }
+
+  // Use center from metadata (V10.5 export computed this correctly)
   const center = new THREE.Vector3(...metadata.center);
 
   debugLog(child.name, 'Center from metadata:', metadata.center);
 
   return {
     uniqueKey,
-    mesh: newMesh,
+    mesh: new THREE.Mesh(geometry),  // Lightweight - just references existing geometry
     metadata,
     center,
   };
@@ -216,6 +358,7 @@ function StructureMesh({ structure }: StructureMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const animatedOpacity = useRef(1);
+  const lastClickTime = useRef(0);
 
   const {
     hoveredStructureId,
@@ -225,10 +368,13 @@ function StructureMesh({ structure }: StructureMeshProps) {
     layerVisibility,
     peelDepth,
     searchQuery,
+    manuallyPeeledIds,
+    toggleManualPeel,
   } = useAnatomyStore();
 
   const colors = TYPE_COLORS[metadata.type] || TYPE_COLORS.muscle;
   const isSelected = selectedStructureId === metadata.meshId;
+  const isManuallyPeeled = manuallyPeeledIds.has(metadata.meshId);
 
   const matchesSearch = searchQuery.length > 1 && (
     metadata.meshId.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -240,9 +386,12 @@ function StructureMesh({ structure }: StructureMeshProps) {
   const visibilityKey = TYPE_TO_VISIBILITY_KEY[metadata.type] || 'muscles';
   const isTypeVisible = layerVisibility[visibilityKey];
 
+  // Layer-based peeling (global slider)
   const maxVisibleLayer = 3 - peelDepth;
-  const isPeeled = metadata.layer > maxVisibleLayer;
-  const shouldPeel = isPeeled && !matchesSearch;
+  const isLayerPeeled = metadata.layer > maxVisibleLayer;
+
+  // Combined peeling: either layer-peeled OR manually peeled (but not if search matches)
+  const shouldPeel = (isLayerPeeled || isManuallyPeeled) && !matchesSearch;
   const targetOpacity = shouldPeel ? 0 : (metadata.type === 'bone' ? 1 : 0.9);
 
   const material = useMemo(() => {
@@ -275,7 +424,30 @@ function StructureMesh({ structure }: StructureMeshProps) {
 
   if (!isTypeVisible) return null;
 
-  const isInteractive = animatedOpacity.current > 0.1;
+  // Base interactivity on render-time state, not animated opacity
+  // This ensures raycast updates immediately when peelDepth changes
+  const isInteractive = !shouldPeel;
+
+  // Handle click with double-click detection for peeling
+  const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+    if (!isInteractive) return;
+    e.stopPropagation();
+
+    const now = Date.now();
+    const timeSinceLastClick = now - lastClickTime.current;
+    lastClickTime.current = now;
+
+    // Double-click threshold: 300ms
+    if (timeSinceLastClick < 300) {
+      // Double-click: toggle manual peel
+      toggleManualPeel(metadata.meshId);
+      // Clear selection since structure is being peeled away
+      setSelectedStructure(null);
+    } else {
+      // Single click: toggle selection
+      setSelectedStructure(isSelected ? null : metadata.meshId);
+    }
+  }, [isInteractive, isSelected, metadata.meshId, setSelectedStructure, toggleManualPeel]);
 
   useEffect(() => {
     if (isSelected) {
@@ -287,7 +459,9 @@ function StructureMesh({ structure }: StructureMeshProps) {
     <mesh
       ref={meshRef}
       geometry={mesh.geometry}
-      raycast={isInteractive ? undefined : () => { }}
+      // Note: We don't manipulate raycast prop directly as it can break Three.js internals.
+      // Instead, we rely on early returns in event handlers for non-interactive states.
+      // Performance impact is negligible since handlers exit immediately.
       onPointerOver={(e) => {
         if (!isInteractive) return;
         e.stopPropagation();
@@ -302,11 +476,7 @@ function StructureMesh({ structure }: StructureMeshProps) {
         setHoveredStructure(null);
         document.body.style.cursor = 'auto';
       }}
-      onClick={(e) => {
-        if (!isInteractive) return;
-        e.stopPropagation();
-        setSelectedStructure(isSelected ? null : metadata.meshId);
-      }}
+      onClick={handleClick}
     >
       <primitive object={material} ref={materialRef} attach="material" />
     </mesh>
@@ -331,12 +501,16 @@ export function AnatomyModelGLTF() {
     let skippedDuplicate = 0;
     let unmatchedCount = 0;
 
+    // Build side lookup map for efficient bilateral structure matching
+    const sideLookup = buildSideLookupMap(metadata.structures);
+
     // Update world matrices for the entire scene hierarchy
     scene.updateMatrixWorld(true);
 
     if (DEBUG_ENABLED) {
       console.log('='.repeat(60));
       console.log('[DEBUG] Processing anatomy model...');
+      console.log(`[DEBUG] Side lookup map has ${sideLookup.size} base names`);
       console.log('='.repeat(60));
     }
 
@@ -344,11 +518,11 @@ export function AnatomyModelGLTF() {
       if (child instanceof THREE.Mesh) {
         const gltfMeshName = child.name;
 
-        // Find matching metadata
-        const match = findMetadataForMesh(gltfMeshName, metadata.structures);
+        // Find matching metadata using smart position-based matching
+        const match = findMetadataForMesh(child, metadata.structures, sideLookup);
 
         if (!match) {
-          console.log("No match for", gltfMeshName)
+          console.log(`No match for mesh name: ${gltfMeshName}`)
           unmatchedCount++;
           return;
         }
@@ -356,7 +530,10 @@ export function AnatomyModelGLTF() {
         // Skip if we've already used this metadata entry (prevents duplicates)
         if (usedMetadataKeys.has(match.key)) {
           skippedDuplicate++;
-          debugLog(gltfMeshName, `Skipping duplicate for metadata key: ${match.key}`);
+          // Only log if debug enabled to reduce console noise
+          if (DEBUG_ENABLED) {
+            console.log(`Skipping duplicate for metadata key: ${match.key}`);
+          }
           return;
         }
 

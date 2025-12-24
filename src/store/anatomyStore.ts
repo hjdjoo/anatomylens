@@ -42,6 +42,12 @@ interface AnatomyState {
    */
   peelDepth: number;
 
+  /**
+   * Set of structure IDs that have been manually peeled via double-click.
+   * These are hidden regardless of peelDepth setting.
+   */
+  manuallyPeeledIds: Set<string>;
+
   // === UI State ===
   /** Whether the info panel is expanded */
   infoPanelOpen: boolean;
@@ -86,6 +92,16 @@ interface AnatomyActions {
   /** Reset to show all layers */
   resetPeel: () => void;
 
+  // === Manual Peeling Actions ===
+  /** Toggle manual peel for a specific structure (via double-click) */
+  toggleManualPeel: (id: string) => void;
+  /** Check if a structure is manually peeled */
+  isManuallyPeeled: (id: string) => boolean;
+  /** Reset all manual peels */
+  resetManualPeels: () => void;
+  /** Get count of manually peeled structures */
+  getManualPeelCount: () => number;
+
   // === UI Actions ===
   toggleInfoPanel: () => void;
   setInfoPanelOpen: (open: boolean) => void;
@@ -126,6 +142,7 @@ export const useAnatomyStore = create<AnatomyStore>()(
     layerVisibility: defaultLayerVisibility,
     zoomLevel: 1,
     peelDepth: 0, // 0 = show all layers
+    manuallyPeeledIds: new Set<string>(),
     infoPanelOpen: false,
     settingsPanelOpen: false,
     searchQuery: '',
@@ -207,6 +224,28 @@ export const useAnatomyStore = create<AnatomyStore>()(
     }),
 
     resetPeel: () => set({ peelDepth: 0 }),
+
+    // === Manual Peeling Actions ===
+    toggleManualPeel: (id) => set((state) => {
+      const next = new Set(state.manuallyPeeledIds);
+      if (next.has(id)) {
+        next.delete(id);
+        console.log(`[PEEL] Restored: ${id}`);
+      } else {
+        next.add(id);
+        console.log(`[PEEL] Peeled: ${id}`);
+      }
+      return { manuallyPeeledIds: next };
+    }),
+
+    isManuallyPeeled: (id) => _get().manuallyPeeledIds.has(id),
+
+    resetManualPeels: () => {
+      console.log('[PEEL] Reset all manual peels');
+      set({ manuallyPeeledIds: new Set<string>() });
+    },
+
+    getManualPeelCount: () => _get().manuallyPeeledIds.size,
 
     // === UI Actions ===
     toggleInfoPanel: () => set((state) => ({

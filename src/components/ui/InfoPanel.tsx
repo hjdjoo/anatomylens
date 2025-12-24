@@ -39,11 +39,14 @@ export function InfoPanel() {
     infoPanelOpen,
     setInfoPanelOpen,
     setSelectedStructure,
+    toggleManualPeel,
+    manuallyPeeledIds,
   } = useAnatomyStore();
 
   // Get structure from metadata
   const metadata = JSON.parse(JSON.stringify(torsoMetadata)) as { structures: Record<string, StructureMetadata> };
   const structure = selectedStructureId ? metadata.structures[selectedStructureId] : null;
+  const isManuallyPeeled = selectedStructureId ? manuallyPeeledIds.has(selectedStructureId) : false;
 
   // console.log(structure);
 
@@ -80,16 +83,57 @@ export function InfoPanel() {
             </button>
           </div>
 
-          {/* Type badge */}
-          <span className={`
-            inline-block mt-2 px-2 py-0.5 rounded text-xs uppercase tracking-wide font-medium
-            ${structure.type === 'bone' ? 'bg-anatomy-bone/20 text-anatomy-bone' : ''}
-            ${structure.type === 'muscle' ? 'bg-anatomy-muscle/20 text-red-300' : ''}
-            ${structure.type === 'tendon' ? 'bg-anatomy-tendon/20 text-anatomy-tendon' : ''}
-            ${structure.type === 'organ' ? 'bg-anatomy-organ/20 text-pink-300' : ''}
-          `}>
-            {structure.type}
-          </span>
+          {/* Type badge and Peel button */}
+          <div className="flex items-center justify-between mt-2">
+            <span className={`
+              inline-block px-2 py-0.5 rounded text-xs uppercase tracking-wide font-medium
+              ${structure.type === 'bone' ? 'bg-anatomy-bone/20 text-anatomy-bone' : ''}
+              ${structure.type === 'muscle' ? 'bg-anatomy-muscle/20 text-red-300' : ''}
+              ${structure.type === 'tendon' ? 'bg-anatomy-tendon/20 text-anatomy-tendon' : ''}
+              ${structure.type === 'ligament' ? 'bg-amber-900/30 text-amber-300' : ''}
+              ${structure.type === 'organ' ? 'bg-anatomy-organ/20 text-pink-300' : ''}
+            `}>
+              {structure.type}
+            </span>
+
+            <button
+              onClick={() => {
+                if (selectedStructureId) {
+                  toggleManualPeel(selectedStructureId);
+                  // Close panel after peeling since structure will be hidden
+                  if (!isManuallyPeeled) {
+                    setInfoPanelOpen(false);
+                    setSelectedStructure(null);
+                  }
+                }
+              }}
+              className={`
+                px-3 py-1 rounded-lg text-xs font-medium transition-all
+                flex items-center gap-1.5
+                ${isManuallyPeeled
+                  ? 'bg-accent-600/20 text-accent-300 hover:bg-accent-600/30'
+                  : 'bg-surface-800 text-surface-300 hover:bg-surface-700'
+                }
+              `}
+            >
+              {isManuallyPeeled ? (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Restore
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                  Peel Away
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -100,14 +144,14 @@ export function InfoPanel() {
               Location
             </h3>
             <div className="flex flex-wrap gap-1.5">
-              {structure.regions.map((region) => (
+              {/* {structure.regions.map((region) => (
                 <span
                   key={region}
                   className="px-2 py-1 text-xs bg-surface-800 text-surface-300 rounded-md capitalize"
                 >
                   {region.replace(/_/g, ' ')}
                 </span>
-              ))}
+              ))} */}
             </div>
           </section>
 
