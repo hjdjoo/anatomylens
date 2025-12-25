@@ -1,5 +1,5 @@
 import { useAnatomyStore } from '@/store';
-import torsoMetadata from "@/data/torso_metadata.json"
+import torsoMetadata from "@/data/body_metadata.json"
 
 // Type for metadata structure
 interface StructureMetadata {

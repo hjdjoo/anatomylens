@@ -6,14 +6,14 @@ import { useAnatomyStore } from '@/store';
 import type { LayerVisibility } from '@/types';
 
 // Import the metadata
-import torsoMetadata from '@/data/torso_metadata.json';
+import bodyMetadata from '@/data/body_metadata.json';
 
 // ============================================================
 // DEBUG CONFIGURATION
 // ============================================================
 
-const DEBUG_ENABLED = false;  // Disabled for production
-const DEBUG_STRUCTURES = ['Inguinal'];
+const DEBUG_ENABLED = true;  // Set to true for debugging
+const DEBUG_STRUCTURES = ["__"];
 
 function debugLog(meshName: string, message: string, data?: unknown) {
   if (!DEBUG_ENABLED) return;
@@ -45,7 +45,7 @@ interface ProcessedStructure {
   uniqueKey: string;           // Unique key for React (glTF mesh name)
   mesh: THREE.Mesh;
   metadata: StructureMetadata;
-  center: THREE.Vector3;       // From metadata (trusted from V7 export)
+  center: THREE.Vector3;       // From metadata (trusted from export)
 }
 
 // ============================================================
@@ -77,22 +77,62 @@ const TYPE_TO_VISIBILITY_KEY: Record<string, keyof LayerVisibility> = {
 // ============================================================
 
 /**
+ * Extract the side suffix from a mesh/node name.
+ * Returns 'left', 'right', or null if no side suffix found.
+ * 
+ * KEY FIX: This function extracts side from the NAME itself,
+ * which is authoritative. Position-based detection was failing
+ * for multi-primitive meshes where primitives are near the midline.
+ * 
+ * Handles patterns like:
+ *   - palmaris_longus_muscle_l -> 'left'
+ *   - palmaris_longus_muscle_r -> 'right'
+ *   - palmaris_longus_muscle_l_1 -> 'left' (Three.js primitive suffix)
+ *   - palmaris_longus_muscle_r_2 -> 'right'
+ */
+function extractSideFromName(name: string): 'left' | 'right' | null {
+  const lowerName = name.toLowerCase();
+  // Check for _l or _r, potentially followed by numeric suffix like _1, _2
+  if (/_l(_\d+)?$/.test(lowerName) || lowerName.endsWith('_l')) {
+    return 'left';
+  }
+  if (/_r(_\d+)?$/.test(lowerName) || lowerName.endsWith('_r')) {
+    return 'right';
+  }
+  return null;
+}
+
+/**
  * Normalize a glTF mesh name to get the base name (without side or numeric suffixes).
  * 
  * glTF exporter adds suffixes like '001', '002', '001_1', '002_1' to mesh names.
+ * Three.js may also add suffixes like '_1', '_2' for multi-primitive meshes.
+ * 
  * Examples:
- *   - '(Abdominal_part_of_pectoralis_major_muscle)001' -> '(abdominal_part_of_pectoralis_major_muscle)'
- *   - '(Abdominal_part_of_pectoralis_major_muscle)001_1' -> '(abdominal_part_of_pectoralis_major_muscle)'
- *   - 'Clavicular_head_of_pectoralis_major_muscle002_1' -> 'clavicular_head_of_pectoralis_major_muscle'
+ *   - 'palmaris_longus_muscle_l' -> 'palmaris_longus_muscle'
+ *   - 'palmaris_longus_muscle_r_1' -> 'palmaris_longus_muscle'
+ *   - '(Abdominal_part_of_pectoralis_major_muscle)001' -> 'abdominal_part_of_pectoralis_major_muscle'
  */
 function normalizeGltfNameToBase(gltfName: string): string {
-  return gltfName
-    .replace(/00\d+(_\d+)?/g, '')  // Remove Blender's numeric suffixes (001, 001_1, 002, 002_1, etc.)
+
+  const normalized = gltfName
+    .replace(/00\d+(_\d+)?/g, '')  // Remove Blender's numeric suffixes (001, 001_1, etc.)
+    .replace(/_\d+$/g, '')          // Remove Three.js primitive suffixes (_1, _2, etc.)
     .toLowerCase()
-    .replace(/[(\()(\))]/g, '')  // Remove parentheses
-    .replace(/_[lr]$/i, '')        // Remove any existing _l or _r suffix
-    .replace(/__+/g, '_')          // Clean up double underscores
-    .replace(/_+$/, '');           // Remove trailing underscores
+    .replace(/[()]/g, '')           // Remove parentheses
+    .replace(/_[lr]$/i, '')         // Remove _l or _r suffix at end
+    .replace(/__+/g, '_')           // Clean up double underscores
+    .replace(/_+$/, '')             // Remove trailing underscores
+    .replace(/\.+$/, '')           // Remove trailing dots
+    .replace(/-/, '_');
+
+  const abnormalSuffixes = ["nel", "ner", "andr", "andl", "usr", "usl"]
+
+  if (abnormalSuffixes.some(suffix => normalized.endsWith(suffix))) {
+    return normalized.slice(0, -1);
+  }
+
+  return normalized;
 }
 
 /**
@@ -114,14 +154,6 @@ function buildSideLookupMap(
     } else if (key.endsWith('_r')) {
       baseName = key.slice(0, -2);
       side = 'right';
-    } else if (key.endsWith('_i')) {
-      // _i suffix typically means "left" in Z-Anatomy joint notation
-      baseName = key.slice(0, -2);
-      side = 'left';
-    } else if (key.endsWith('_j')) {
-      // _j suffix - could be joint or right side, treat as single to avoid collision
-      baseName = key.slice(0, -2);
-      side = 'single';
     } else {
       baseName = key;
       side = 'single';
@@ -144,25 +176,28 @@ function buildSideLookupMap(
 /**
  * Determine which side (left/right) a mesh is on based on its world position.
  * In anatomical convention: positive X = left side, negative X = right side
+ * 
+ * NOTE: This is now only used as a FALLBACK when name-based detection fails.
+ * Name-based detection (extractSideFromName) is preferred because it's authoritative.
  */
 function determineSideFromPosition(mesh: THREE.Mesh): 'left' | 'right' | 'center' {
+  // Ensure world matrix is up to date
+  mesh.updateMatrixWorld(true);
+
   const box = new THREE.Box3().setFromObject(mesh);
   const center = box.getCenter(new THREE.Vector3());
 
-  const threshold = 0.02;
-  if (Math.abs(center.x) < threshold) {
-    return 'center';
-  }
   return center.x > 0 ? 'left' : 'right';
 }
 
 /**
  * Find metadata for a glTF mesh using smart matching.
  * 
- * Strategy:
- * 1. Try exact match
- * 2. Try direct normalized match (for single structures)
- * 3. For bilateral structures, use position to determine _l/_r variant
+ * FIXED Strategy (priority order):
+ * 1. Try exact match with mesh name
+ * 2. Extract side from mesh NAME (not position) - KEY FIX!
+ * 3. Use position-based detection only as final fallback
+ * 4. For center-positioned meshes, don't blindly fallback to left
  */
 function findMetadataForMesh(
   mesh: THREE.Mesh,
@@ -171,51 +206,76 @@ function findMetadataForMesh(
 ): { key: string; data: StructureMetadata } | null {
   const gltfName = mesh.name;
 
-  // Try exact match first
+  // 1. Try exact match first (handles most cases)
   if (structures[gltfName]) {
     return { key: gltfName, data: structures[gltfName] };
   }
 
-  // Try exact match with lowercase
+  // 2. Try exact match with lowercase
   const lowered = gltfName.toLowerCase();
   if (structures[lowered]) {
     return { key: lowered, data: structures[lowered] };
   }
 
-  // Get the base name (without numeric suffixes or side markers)
+  // 3. Extract side from NAME first (before normalizing away the suffix)
+  //    This is the KEY FIX - use the authoritative side info from the name!
+  const nameBasedSide = extractSideFromName(gltfName);
+
+  // 4. Get the base name (without numeric suffixes or side markers)
   const baseName = normalizeGltfNameToBase(gltfName);
 
-  // Look up in side map
+  // 5. Look up in side map
   const sideVariants = sideLookup.get(baseName);
   if (!sideVariants) {
     return null;
   }
 
-  // If there's only a single (non-sided) version, use it
+  // 6. If there's only a single (non-sided) version, use it
   if (sideVariants.single && !sideVariants.left && !sideVariants.right) {
     return { key: sideVariants.single, data: structures[sideVariants.single] };
   }
 
-  // If there are sided versions, determine which one based on position
-  if (sideVariants.left || sideVariants.right) {
-    const side = determineSideFromPosition(mesh);
+  // 7. FIXED: Use name-based side if available (this is authoritative!)
+  if (nameBasedSide === 'left' && sideVariants.left) {
+    debugLog(gltfName, 'Matched via NAME-BASED side detection', { side: 'left', key: sideVariants.left });
+    return { key: sideVariants.left, data: structures[sideVariants.left] };
+  }
+  if (nameBasedSide === 'right' && sideVariants.right) {
+    debugLog(gltfName, 'Matched via NAME-BASED side detection', { side: 'right', key: sideVariants.right });
+    return { key: sideVariants.right, data: structures[sideVariants.right] };
+  }
 
-    if (side === 'left' && sideVariants.left) {
+  // 8. Only fall back to position-based detection if name didn't have side info
+  if (sideVariants.left || sideVariants.right) {
+    const positionSide = determineSideFromPosition(mesh);
+
+    if (positionSide === 'left' && sideVariants.left) {
+      debugLog(gltfName, 'Matched via POSITION-BASED side detection', { side: 'left' });
       return { key: sideVariants.left, data: structures[sideVariants.left] };
     }
-    if (side === 'right' && sideVariants.right) {
+    if (positionSide === 'right' && sideVariants.right) {
+      debugLog(gltfName, 'Matched via POSITION-BASED side detection', { side: 'right' });
       return { key: sideVariants.right, data: structures[sideVariants.right] };
     }
-    // Fallback: if center or missing side variant, try any available
-    if (sideVariants.left) {
-      return { key: sideVariants.left, data: structures[sideVariants.left] };
-    }
-    if (sideVariants.right) {
-      return { key: sideVariants.right, data: structures[sideVariants.right] };
+
+    // 9. FIXED: For 'center' position, DON'T blindly pick left!
+    if (positionSide === 'center') {
+      // If only one side variant exists, use it
+      if (sideVariants.left && !sideVariants.right) {
+        return { key: sideVariants.left, data: structures[sideVariants.left] };
+      }
+      if (sideVariants.right && !sideVariants.left) {
+        return { key: sideVariants.right, data: structures[sideVariants.right] };
+      }
+      // Both exist but position is centered - log warning and skip
+      if (DEBUG_ENABLED) {
+        console.warn(`[AnatomyModel] Cannot determine side for mesh "${gltfName}" - position is centered, skipping`);
+      }
+      return null;
     }
   }
 
-  // Final fallback: try single
+  // 10. Final fallback: try single
   if (sideVariants.single) {
     return { key: sideVariants.single, data: structures[sideVariants.single] };
   }
@@ -227,16 +287,6 @@ function findMetadataForMesh(
 // STRUCTURE FILTERING
 // ============================================================
 
-const EXCLUDE_NAME_PATTERNS = [
-  'plane', 'planes', 'flexion', 'extension', 'rotation', 'abduction',
-  'adduction', 'pronation', 'supination', 'circumduction',
-  'lateral_rectus_muscle', 'medial_rectus_muscle', 'superior_rectus_muscle',
-  'inferior_rectus_muscle', 'superior_oblique_muscle', 'inferior_oblique_muscle',
-  'pronator_quadratus', 'pronator_teres', 'supinator', 'oblique_cord',
-  'plantae', 'popliteal', 'femoris', 'tibial', 'fibular', 'peroneal',
-  'gastrocnemius', 'soleus', 'plantaris', 'lymph_node',
-];
-
 const EXCLUDE_SUFFIX_PATTERNS = [
   /_j$/i,
   /_i$/i,
@@ -246,16 +296,10 @@ const EXCLUDE_SUFFIX_PATTERNS = [
   /_er$/i,
 ];
 
-const EXCLUDE_TYPES = ['organ', 'other'];
+const EXCLUDE_TYPES = ['organ'];
 
 function shouldRenderByTypeAndName(metadata: StructureMetadata): boolean {
   if (EXCLUDE_TYPES.includes(metadata.type)) {
-    return false;
-  }
-
-  const nameLower = metadata.meshId.toLowerCase();
-
-  if (EXCLUDE_NAME_PATTERNS.some(pattern => nameLower.includes(pattern))) {
     return false;
   }
 
@@ -488,15 +532,15 @@ function StructureMesh({ structure }: StructureMeshProps) {
 // ============================================================
 
 export function AnatomyModelGLTF() {
-  const { scene } = useGLTF('/models/torso.glb');
+  const { scene } = useGLTF('/models/body.glb');
   const clearSelection = useAnatomyStore((state) => state.clearSelection);
   const setLoading = useAnatomyStore((state) => state.setLoading);
 
-  const metadata = JSON.parse(JSON.stringify(torsoMetadata)) as MetadataFile;
+  const metadata = JSON.parse(JSON.stringify(bodyMetadata)) as MetadataFile;
 
   const processedStructures = useMemo(() => {
     const structures: ProcessedStructure[] = [];
-    const usedMetadataKeys = new Set<string>();  // Track which metadata entries have been used
+    const processedMeshUuids = new Set<string>();  // Track by UUID, not metadata key
     let skippedByTypeOrName = 0;
     let skippedDuplicate = 0;
     let unmatchedCount = 0;
@@ -518,22 +562,21 @@ export function AnatomyModelGLTF() {
       if (child instanceof THREE.Mesh) {
         const gltfMeshName = child.name;
 
+        // Skip if we've already processed this exact mesh instance
+        // Using UUID allows multi-primitive meshes (like hip bone) to all render
+        if (processedMeshUuids.has(child.uuid)) {
+          skippedDuplicate++;
+          return;
+        }
+
         // Find matching metadata using smart position-based matching
         const match = findMetadataForMesh(child, metadata.structures, sideLookup);
 
         if (!match) {
-          console.log(`No match for mesh name: ${gltfMeshName}`)
-          unmatchedCount++;
-          return;
-        }
-
-        // Skip if we've already used this metadata entry (prevents duplicates)
-        if (usedMetadataKeys.has(match.key)) {
-          skippedDuplicate++;
-          // Only log if debug enabled to reduce console noise
           if (DEBUG_ENABLED) {
-            console.log(`Skipping duplicate for metadata key: ${match.key}`);
+            console.log(`No match for mesh: ${gltfMeshName}`);
           }
+          unmatchedCount++;
           return;
         }
 
@@ -545,11 +588,11 @@ export function AnatomyModelGLTF() {
           return;
         }
 
-        // Mark this metadata key as used
-        usedMetadataKeys.add(match.key);
+        // Mark this specific mesh instance as processed
+        processedMeshUuids.add(child.uuid);
 
-        // Process the mesh - use gltfMeshName as unique key to avoid React key conflicts
-        const processed = processGLTFMesh(child, structureData, gltfMeshName);
+        // Use child.uuid as unique key for React (guaranteed unique per primitive)
+        const processed = processGLTFMesh(child, structureData, child.uuid);
         structures.push(processed);
       }
     });
@@ -598,4 +641,4 @@ export function AnatomyModelGLTF() {
   );
 }
 
-useGLTF.preload('/models/torso.glb');
+useGLTF.preload('/models/body.glb');
