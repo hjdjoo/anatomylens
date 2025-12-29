@@ -7,13 +7,17 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "supabase:types": "supabase gen types typescript --project-id jbsdhlzwkybwlgzhneqf --schema public > database.types.ts"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.4",
     "@react-three/drei": "^9.114.0",
     "@react-three/fiber": "^8.17.0",
+    "@supabase/supabase-js": "^2.89.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "stripe": "^20.1.0",
     "three": "^0.169.0",
     "zustand": "^5.0.0"
   },

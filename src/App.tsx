@@ -42,6 +42,10 @@ function App() {
               <kbd className="px-1.5 py-0.5 bg-surface-800 rounded text-surface-300 font-mono">Drag</kbd>
               <span>Rotate</span>
             </span>
+            <span className="flex items-center gap-1.5">
+              <kbd className="px-1.5 py-0.5 bg-surface-800 rounded text-surface-300 font-mono">Right-Click + Drag</kbd>
+              <span>Pan</span>
+            </span>
             <span className="text-surface-700">•</span>
             <span className="flex items-center gap-1.5">
               <kbd className="px-1.5 py-0.5 bg-surface-800 rounded text-surface-300 font-mono">Scroll</kbd>

@@ -12,7 +12,7 @@ export function Header() {
             Anatomy<span className="text-surface-500">Explorer</span>
           </h1>
           <p className="text-xs text-surface-500 mt-0.5">
-            Interactive 3D Anatomy · Torso
+            Interactive 3D Anatomy
           </p>
         </div>
 

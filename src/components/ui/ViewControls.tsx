@@ -28,6 +28,10 @@ export function ViewControls() {
     setSearchQuery,
     manuallyPeeledIds,
     resetManualPeels,
+    undoLastPeel,
+    peelHistory,
+    searchIsolationMode,
+    toggleSearchIsolation,
   } = useAnatomyStore();
 
   const manualPeelCount = manuallyPeeledIds.size;
@@ -75,6 +79,43 @@ export function ViewControls() {
             </button>
           )}
         </div>
+
+        {/* Search Isolation Toggle */}
+        {searchQuery.length > 1 && (
+          <div className="mt-2 pt-2 border-t border-surface-700/50">
+            <button
+              onClick={toggleSearchIsolation}
+              className={`
+                w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs
+                transition-all
+                ${searchIsolationMode
+                  ? 'bg-accent-600/20 text-accent-300'
+                  : 'bg-surface-800 text-surface-400 hover:bg-surface-700'
+                }
+              `}
+            >
+              <span className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Isolate result
+              </span>
+              <span className={`
+                w-8 h-4 rounded-full transition-colors relative
+                ${searchIsolationMode ? 'bg-accent-500' : 'bg-surface-600'}
+              `}>
+                <span className={`
+                  absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform
+                  ${searchIsolationMode ? 'translate-x-4' : 'translate-x-0.5'}
+                `} />
+              </span>
+            </button>
+            <p className="text-[10px] text-surface-500 mt-1 px-1">
+              {searchIsolationMode ? 'Showing only matching structures + bones' : 'Highlighting matches in context'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Depth Peeling */}
@@ -146,18 +187,37 @@ export function ViewControls() {
         {/* Manual peels indicator */}
         {manualPeelCount > 0 && (
           <div className="mt-3 pt-3 border-t border-surface-700/50">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-surface-400">
                 {manualPeelCount} structure{manualPeelCount !== 1 ? 's' : ''} hidden
               </span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={undoLastPeel}
+                disabled={peelHistory.length === 0}
+                className={`
+                  flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
+                  flex items-center justify-center gap-1
+                  ${peelHistory.length === 0
+                    ? 'bg-surface-800 text-surface-600 cursor-not-allowed'
+                    : 'bg-surface-800 text-surface-300 hover:bg-surface-700 active:scale-95'
+                  }
+                `}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                Undo
+              </button>
               <button
                 onClick={resetManualPeels}
-                className="px-2 py-1 text-xs text-accent-400 hover:text-accent-300 transition-colors"
+                className="flex-1 px-2 py-1.5 text-xs text-accent-400 hover:text-accent-300 hover:bg-accent-600/10 rounded-lg transition-all"
               >
                 Restore all
               </button>
             </div>
-            <p className="text-[10px] text-surface-500 mt-1">
+            <p className="text-[10px] text-surface-500 mt-1.5">
               Double-click structures to hide/show
             </p>
           </div>
@@ -165,7 +225,7 @@ export function ViewControls() {
       </div>
 
       {/* View Mode Toggle */}
-      <div className="bg-surface-900/95 backdrop-blur-xl rounded-xl border border-surface-700/50 p-3 shadow-lg">
+      {/* <div className="bg-surface-900/95 backdrop-blur-xl rounded-xl border border-surface-700/50 p-3 shadow-lg">
         <div className="text-xs font-semibold text-surface-400 uppercase tracking-wide mb-2">
           View Mode
         </div>
@@ -195,7 +255,7 @@ export function ViewControls() {
             Clinical
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Layer Visibility */}
       <div className="bg-surface-900/95 backdrop-blur-xl rounded-xl border border-surface-700/50 p-3 shadow-lg">
@@ -255,7 +315,7 @@ export function ViewControls() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
           </svg>
-          <span>Click to select • Double-click to peel</span>
+          <span>Click to select Double-click to peel</span>
         </div>
       </div>
     </div>

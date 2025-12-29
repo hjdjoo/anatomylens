@@ -40,7 +40,7 @@
         "hand"
       ]
     },
-    "total_structures": 1507,
+    "total_structures": 1150,
     "known_issues": [
       "Iliocostalis colli muscle: Left side named without .l suffix in Z-Anatomy source",
       "Ulnopisiform ligament: Right side missing .r suffix in Z-Anatomy source"

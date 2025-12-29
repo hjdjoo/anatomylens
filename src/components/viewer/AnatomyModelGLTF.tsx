@@ -12,7 +12,7 @@ import bodyMetadata from '@/data/body_metadata.json';
 // DEBUG CONFIGURATION
 // ============================================================
 
-const DEBUG_ENABLED = true;  // Set to true for debugging
+const DEBUG_ENABLED = true;
 const DEBUG_STRUCTURES = ["__"];
 
 function debugLog(meshName: string, message: string, data?: unknown) {
@@ -25,27 +25,35 @@ function debugLog(meshName: string, message: string, data?: unknown) {
 // TYPES
 // ============================================================
 
-interface StructureMetadata {
+export interface StructureMetadata {
   meshId: string;
   originalName: string;
-  type: 'bone' | 'muscle' | 'organ' | 'tendon' | 'ligament' | 'cartilage' | 'fascia' | 'other';
+  baseName: string;
+  type: 'bone' | 'muscle' | 'organ' | 'tendon' | 'ligament' | 'cartilage' | 'fascia' | 'bursa' | 'capsule' | 'membrane' | 'other';
   layer: number;
-  regions: string[];
+  region: string;
+  bilateral: boolean;
   center: [number, number, number];
+  mirroredCenter?: [number, number, number];
 }
 
-interface MetadataFile {
+export interface MetadataFile {
   version: string;
   source: string;
   region: string;
+  export_notes: string;
+  bilateral_count: number;
+  midline_count: number;
   structures: Record<string, StructureMetadata>;
 }
 
 interface ProcessedStructure {
-  uniqueKey: string;           // Unique key for React (glTF mesh name)
-  mesh: THREE.Mesh;
+  uniqueKey: string;
+  geometry: THREE.BufferGeometry;
+  worldMatrix: THREE.Matrix4;
   metadata: StructureMetadata;
-  center: THREE.Vector3;       // From metadata (trusted from export)
+  center: THREE.Vector3;
+  mirroredCenter?: THREE.Vector3;
 }
 
 // ============================================================
@@ -60,6 +68,10 @@ const TYPE_COLORS: Record<string, { default: string; highlight: string }> = {
   ligament: { default: '#8B7355', highlight: '#A89070' },
   cartilage: { default: '#A8D5BA', highlight: '#C5E8D2' },
   fascia: { default: '#D4A5A5', highlight: '#E8C5C5' },
+  bursa: { default: '#B8A090', highlight: '#D0C0B0' },
+  capsule: { default: '#9090A8', highlight: '#B0B0C8' },
+  membrane: { default: '#A0B8A0', highlight: '#C0D8C0' },
+  other: { default: '#888888', highlight: '#AAAAAA' },
 };
 
 const TYPE_TO_VISIBILITY_KEY: Record<string, keyof LayerVisibility> = {
@@ -70,218 +82,11 @@ const TYPE_TO_VISIBILITY_KEY: Record<string, keyof LayerVisibility> = {
   ligament: 'ligaments',
   cartilage: 'bones',
   fascia: 'muscles',
+  bursa: 'ligaments',
+  capsule: 'ligaments',
+  membrane: 'ligaments',
+  other: 'muscles',
 };
-
-// ============================================================
-// GLTF NAME NORMALIZATION & MATCHING
-// ============================================================
-
-/**
- * Extract the side suffix from a mesh/node name.
- * Returns 'left', 'right', or null if no side suffix found.
- * 
- * KEY FIX: This function extracts side from the NAME itself,
- * which is authoritative. Position-based detection was failing
- * for multi-primitive meshes where primitives are near the midline.
- * 
- * Handles patterns like:
- *   - palmaris_longus_muscle_l -> 'left'
- *   - palmaris_longus_muscle_r -> 'right'
- *   - palmaris_longus_muscle_l_1 -> 'left' (Three.js primitive suffix)
- *   - palmaris_longus_muscle_r_2 -> 'right'
- */
-function extractSideFromName(name: string): 'left' | 'right' | null {
-  const lowerName = name.toLowerCase();
-  // Check for _l or _r, potentially followed by numeric suffix like _1, _2
-  if (/_l(_\d+)?$/.test(lowerName) || lowerName.endsWith('_l')) {
-    return 'left';
-  }
-  if (/_r(_\d+)?$/.test(lowerName) || lowerName.endsWith('_r')) {
-    return 'right';
-  }
-  return null;
-}
-
-/**
- * Normalize a glTF mesh name to get the base name (without side or numeric suffixes).
- * 
- * glTF exporter adds suffixes like '001', '002', '001_1', '002_1' to mesh names.
- * Three.js may also add suffixes like '_1', '_2' for multi-primitive meshes.
- * 
- * Examples:
- *   - 'palmaris_longus_muscle_l' -> 'palmaris_longus_muscle'
- *   - 'palmaris_longus_muscle_r_1' -> 'palmaris_longus_muscle'
- *   - '(Abdominal_part_of_pectoralis_major_muscle)001' -> 'abdominal_part_of_pectoralis_major_muscle'
- */
-function normalizeGltfNameToBase(gltfName: string): string {
-
-  const normalized = gltfName
-    .replace(/00\d+(_\d+)?/g, '')  // Remove Blender's numeric suffixes (001, 001_1, etc.)
-    .replace(/_\d+$/g, '')          // Remove Three.js primitive suffixes (_1, _2, etc.)
-    .toLowerCase()
-    .replace(/[()]/g, '')           // Remove parentheses
-    .replace(/_[lr]$/i, '')         // Remove _l or _r suffix at end
-    .replace(/__+/g, '_')           // Clean up double underscores
-    .replace(/_+$/, '')             // Remove trailing underscores
-    .replace(/\.+$/, '')           // Remove trailing dots
-    .replace(/-/, '_');
-
-  const abnormalSuffixes = ["nel", "ner", "andr", "andl", "usr", "usl"]
-
-  if (abnormalSuffixes.some(suffix => normalized.endsWith(suffix))) {
-    return normalized.slice(0, -1);
-  }
-
-  return normalized;
-}
-
-/**
- * Build a lookup map from base names to their _l/_r variants in metadata.
- * This enables O(1) matching for bilateral structures.
- */
-function buildSideLookupMap(
-  structures: Record<string, StructureMetadata>
-): Map<string, { left?: string; right?: string; single?: string }> {
-  const lookup = new Map<string, { left?: string; right?: string; single?: string }>();
-
-  for (const key of Object.keys(structures)) {
-    let baseName: string;
-    let side: 'left' | 'right' | 'single';
-
-    if (key.endsWith('_l')) {
-      baseName = key.slice(0, -2);
-      side = 'left';
-    } else if (key.endsWith('_r')) {
-      baseName = key.slice(0, -2);
-      side = 'right';
-    } else {
-      baseName = key;
-      side = 'single';
-    }
-
-    const existing = lookup.get(baseName) || {};
-    if (side === 'left') {
-      existing.left = key;
-    } else if (side === 'right') {
-      existing.right = key;
-    } else {
-      existing.single = key;
-    }
-    lookup.set(baseName, existing);
-  }
-
-  return lookup;
-}
-
-/**
- * Determine which side (left/right) a mesh is on based on its world position.
- * In anatomical convention: positive X = left side, negative X = right side
- * 
- * NOTE: This is now only used as a FALLBACK when name-based detection fails.
- * Name-based detection (extractSideFromName) is preferred because it's authoritative.
- */
-function determineSideFromPosition(mesh: THREE.Mesh): 'left' | 'right' | 'center' {
-  // Ensure world matrix is up to date
-  mesh.updateMatrixWorld(true);
-
-  const box = new THREE.Box3().setFromObject(mesh);
-  const center = box.getCenter(new THREE.Vector3());
-
-  return center.x > 0 ? 'left' : 'right';
-}
-
-/**
- * Find metadata for a glTF mesh using smart matching.
- * 
- * FIXED Strategy (priority order):
- * 1. Try exact match with mesh name
- * 2. Extract side from mesh NAME (not position) - KEY FIX!
- * 3. Use position-based detection only as final fallback
- * 4. For center-positioned meshes, don't blindly fallback to left
- */
-function findMetadataForMesh(
-  mesh: THREE.Mesh,
-  structures: Record<string, StructureMetadata>,
-  sideLookup: Map<string, { left?: string; right?: string; single?: string }>
-): { key: string; data: StructureMetadata } | null {
-  const gltfName = mesh.name;
-
-  // 1. Try exact match first (handles most cases)
-  if (structures[gltfName]) {
-    return { key: gltfName, data: structures[gltfName] };
-  }
-
-  // 2. Try exact match with lowercase
-  const lowered = gltfName.toLowerCase();
-  if (structures[lowered]) {
-    return { key: lowered, data: structures[lowered] };
-  }
-
-  // 3. Extract side from NAME first (before normalizing away the suffix)
-  //    This is the KEY FIX - use the authoritative side info from the name!
-  const nameBasedSide = extractSideFromName(gltfName);
-
-  // 4. Get the base name (without numeric suffixes or side markers)
-  const baseName = normalizeGltfNameToBase(gltfName);
-
-  // 5. Look up in side map
-  const sideVariants = sideLookup.get(baseName);
-  if (!sideVariants) {
-    return null;
-  }
-
-  // 6. If there's only a single (non-sided) version, use it
-  if (sideVariants.single && !sideVariants.left && !sideVariants.right) {
-    return { key: sideVariants.single, data: structures[sideVariants.single] };
-  }
-
-  // 7. FIXED: Use name-based side if available (this is authoritative!)
-  if (nameBasedSide === 'left' && sideVariants.left) {
-    debugLog(gltfName, 'Matched via NAME-BASED side detection', { side: 'left', key: sideVariants.left });
-    return { key: sideVariants.left, data: structures[sideVariants.left] };
-  }
-  if (nameBasedSide === 'right' && sideVariants.right) {
-    debugLog(gltfName, 'Matched via NAME-BASED side detection', { side: 'right', key: sideVariants.right });
-    return { key: sideVariants.right, data: structures[sideVariants.right] };
-  }
-
-  // 8. Only fall back to position-based detection if name didn't have side info
-  if (sideVariants.left || sideVariants.right) {
-    const positionSide = determineSideFromPosition(mesh);
-
-    if (positionSide === 'left' && sideVariants.left) {
-      debugLog(gltfName, 'Matched via POSITION-BASED side detection', { side: 'left' });
-      return { key: sideVariants.left, data: structures[sideVariants.left] };
-    }
-    if (positionSide === 'right' && sideVariants.right) {
-      debugLog(gltfName, 'Matched via POSITION-BASED side detection', { side: 'right' });
-      return { key: sideVariants.right, data: structures[sideVariants.right] };
-    }
-
-    // 9. FIXED: For 'center' position, DON'T blindly pick left!
-    if (positionSide === 'center') {
-      // If only one side variant exists, use it
-      if (sideVariants.left && !sideVariants.right) {
-        return { key: sideVariants.left, data: structures[sideVariants.left] };
-      }
-      if (sideVariants.right && !sideVariants.left) {
-        return { key: sideVariants.right, data: structures[sideVariants.right] };
-      }
-      // Both exist but position is centered - log warning and skip
-      if (DEBUG_ENABLED) {
-        console.warn(`[AnatomyModel] Cannot determine side for mesh "${gltfName}" - position is centered, skipping`);
-      }
-      return null;
-    }
-  }
-
-  // 10. Final fallback: try single
-  if (sideVariants.single) {
-    return { key: sideVariants.single, data: structures[sideVariants.single] };
-  }
-
-  return null;
-}
 
 // ============================================================
 // STRUCTURE FILTERING
@@ -302,94 +107,174 @@ function shouldRenderByTypeAndName(metadata: StructureMetadata): boolean {
   if (EXCLUDE_TYPES.includes(metadata.type)) {
     return false;
   }
-
   if (EXCLUDE_SUFFIX_PATTERNS.some(pattern => pattern.test(metadata.meshId))) {
     return false;
   }
-
   return true;
 }
 
 // ============================================================
-// MESH PROCESSING (OPTIMIZED - NO CLONING)
+// MESH MATCHING - SIMPLIFIED FOR V11
 // ============================================================
+function normalizeGltfNameToBase(gltfName: string): string {
+  const normalized = gltfName
+    .replace(/00\d+(_\d+)?/g, '')
+    .replace(/_\d+$/g, '')
+    .toLowerCase()
+    .replace(/[()]/g, '')
+    .replace(/_[lr]$/i, '')
+    .replace(/__+/g, '_')
+    .replace(/_+$/, '')
+    .replace(/\.+$/, '')
+    .replace(/-/, '_');
 
-/**
- * Check if a matrix is effectively identity (transforms already baked into vertices).
- * V10.5 export applies transforms before export, so matrixWorld should be identity.
- */
-function isIdentityMatrix(matrix: THREE.Matrix4, tolerance = 0.0001): boolean {
-  const elements = matrix.elements;
-  // Identity matrix: diagonal = 1, off-diagonal = 0
-  const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-  for (let i = 0; i < 16; i++) {
-    if (Math.abs(elements[i] - identity[i]) > tolerance) {
-      return false;
-    }
+  const abnormalSuffixes = ["nel", "ner", "andr", "andl", "usr", "usl"];
+  if (abnormalSuffixes.some(suffix => normalized.endsWith(suffix))) {
+    return normalized.slice(0, -1);
   }
-  return true;
+
+  return normalized;
 }
 
-// Track if we've logged the transform status (once per session)
-let hasLoggedTransformStatus = false;
-
 /**
- * Process a mesh from the glTF scene.
- * 
- * OPTIMIZATION: V10.5 export bakes transforms into vertices, so matrixWorld
- * should be identity. We use the original geometry directly instead of cloning,
- * reducing memory usage by ~50%.
- * 
- * Center comes from metadata (trusted from V10.5 export).
+ * Match a glTF mesh to its metadata.
+ * V11 simplification: mesh names in GLB should exactly match metadata keys.
  */
+function findMetadataForMesh(
+  meshName: string,
+  structures: Record<string, StructureMetadata>
+): StructureMetadata | null {
+  // Direct match (most common case in V11)
+  if (structures[meshName]) {
+    return structures[meshName];
+  }
+
+  // Lowercase fallback
+  const lowered = meshName.toLowerCase();
+  if (structures[lowered]) {
+    return structures[lowered];
+  }
+
+  const normalized = normalizeGltfNameToBase(meshName);
+  if (structures[normalized]) {
+    return structures[normalized]
+  }
+
+  // Try without numeric suffix (e.g., "mesh_name_1" -> "mesh_name")
+  const withoutSuffix = meshName.replace(/_\d+$/, '');
+  if (structures[withoutSuffix]) {
+    return structures[withoutSuffix];
+  }
+
+  return null;
+}
+
+// ============================================================
+// MESH PROCESSING
+// ============================================================
+
+let hasLoggedMemoryStrategy = false;
+
 function processGLTFMesh(
   child: THREE.Mesh,
   metadata: StructureMetadata,
   uniqueKey: string
 ): ProcessedStructure {
-  debugLog(child.name, 'Processing mesh');
-
-  const hasIdentityTransform = isIdentityMatrix(child.matrixWorld);
-
-  // Log transform status once to help diagnose issues
-  if (!hasLoggedTransformStatus && DEBUG_ENABLED) {
-    hasLoggedTransformStatus = true;
-    if (hasIdentityTransform) {
-      console.log('[MEMORY] ✓ Transforms are baked - using geometry directly (no cloning)');
-    } else {
-      console.log('[MEMORY] ⚠ Transforms not baked - falling back to cloning');
-      console.log('  First mesh matrixWorld:', child.matrixWorld.elements);
-    }
+  if (!hasLoggedMemoryStrategy) {
+    hasLoggedMemoryStrategy = true;
+    console.log('[MEMORY] ✓ Using direct geometry references (no cloning)');
+    console.log('[MEMORY] ✓ Bilateral structures mirrored at runtime');
   }
 
-  let geometry: THREE.BufferGeometry;
-
-  if (hasIdentityTransform) {
-    // OPTIMIZED PATH: Use geometry directly (no clone needed)
-    // This saves ~100MB by avoiding geometry duplication
-    geometry = child.geometry;
-  } else {
-    // FALLBACK PATH: Clone and bake transform (legacy behavior)
-    // This shouldn't happen with V10.5 exports
-    geometry = child.geometry.clone();
-    geometry.applyMatrix4(child.matrixWorld);
-  }
-
-  // Use center from metadata (V10.5 export computed this correctly)
+  const worldMatrix = child.matrixWorld.clone();
   const center = new THREE.Vector3(...metadata.center);
 
-  debugLog(child.name, 'Center from metadata:', metadata.center);
+  // For bilateral structures, also store the mirrored center
+  const mirroredCenter = metadata.bilateral && metadata.mirroredCenter
+    ? new THREE.Vector3(...metadata.mirroredCenter)
+    : undefined;
 
   return {
     uniqueKey,
-    mesh: new THREE.Mesh(geometry),  // Lightweight - just references existing geometry
+    geometry: child.geometry,
+    worldMatrix,
     metadata,
     center,
+    mirroredCenter,
   };
 }
 
 // ============================================================
-// STRUCTURE MESH COMPONENT
+// SINGLE MESH INSTANCE COMPONENT
+// ============================================================
+
+interface MeshInstanceProps {
+  geometry: THREE.BufferGeometry;
+  worldMatrix: THREE.Matrix4;
+  metadata: StructureMetadata;
+  isMirrored: boolean;
+  material: THREE.MeshStandardMaterial;
+  onPointerOver: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
+  onClick: (e: ThreeEvent<MouseEvent>) => void;
+  isInteractive: boolean;
+}
+
+function MeshInstance({
+  geometry,
+  worldMatrix,
+  isMirrored,
+  material,
+  onPointerOver,
+  onPointerOut,
+  onClick,
+  isInteractive,
+}: MeshInstanceProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.matrixAutoUpdate = false;
+
+      if (isMirrored) {
+        // Create mirrored matrix: flip X axis
+        const mirrorMatrix = worldMatrix.clone();
+        const position = new THREE.Vector3();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        mirrorMatrix.decompose(position, quaternion, scale);
+
+        // Mirror position across X=0
+        position.x = -position.x;
+
+        // Mirror the rotation (flip X scale to mirror geometry)
+        scale.x = -scale.x;
+
+        mirrorMatrix.compose(position, quaternion, scale);
+        meshRef.current.matrix.copy(mirrorMatrix);
+      } else {
+        meshRef.current.matrix.copy(worldMatrix);
+      }
+
+      meshRef.current.matrixWorldNeedsUpdate = true;
+    }
+  }, [worldMatrix, isMirrored]);
+
+  return (
+    <mesh
+      ref={meshRef}
+      geometry={geometry}
+      material={material}
+      matrixAutoUpdate={false}
+      onPointerOver={isInteractive ? onPointerOver : undefined}
+      onPointerOut={isInteractive ? onPointerOut : undefined}
+      onClick={isInteractive ? onClick : undefined}
+    />
+  );
+}
+
+// ============================================================
+// STRUCTURE MESH COMPONENT (handles bilateral rendering)
 // ============================================================
 
 interface StructureMeshProps {
@@ -397,9 +282,8 @@ interface StructureMeshProps {
 }
 
 function StructureMesh({ structure }: StructureMeshProps) {
-  const { mesh, metadata, center } = structure;
-  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
+  const { geometry, worldMatrix, metadata } = structure;
+  // const materialRef = useRef<THREE.MeshStandardMaterial>(null);
   const [hovered, setHovered] = useState(false);
   const animatedOpacity = useRef(1);
   const lastClickTime = useRef(0);
@@ -412,6 +296,7 @@ function StructureMesh({ structure }: StructureMeshProps) {
     layerVisibility,
     peelDepth,
     searchQuery,
+    searchIsolationMode,
     manuallyPeeledIds,
     toggleManualPeel,
   } = useAnatomyStore();
@@ -420,9 +305,11 @@ function StructureMesh({ structure }: StructureMeshProps) {
   const isSelected = selectedStructureId === metadata.meshId;
   const isManuallyPeeled = manuallyPeeledIds.has(metadata.meshId);
 
+  // Search matching - check both meshId and original name
   const matchesSearch = searchQuery.length > 1 && (
     metadata.meshId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    metadata.originalName.toLowerCase().includes(searchQuery.toLowerCase())
+    metadata.originalName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    metadata.baseName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const isHighlighted = hovered || isSelected || hoveredStructureId === metadata.meshId || matchesSearch;
@@ -430,14 +317,17 @@ function StructureMesh({ structure }: StructureMeshProps) {
   const visibilityKey = TYPE_TO_VISIBILITY_KEY[metadata.type] || 'muscles';
   const isTypeVisible = layerVisibility[visibilityKey];
 
-  // Layer-based peeling (global slider)
+  const isBoneType = metadata.type === 'bone' || metadata.type === 'cartilage';
+  const isSearchActive = searchQuery.length > 1;
+  const isHiddenByIsolation = isSearchActive && searchIsolationMode && !matchesSearch && !isBoneType;
+
   const maxVisibleLayer = 3 - peelDepth;
   const isLayerPeeled = metadata.layer > maxVisibleLayer;
 
-  // Combined peeling: either layer-peeled OR manually peeled (but not if search matches)
-  const shouldPeel = (isLayerPeeled || isManuallyPeeled) && !matchesSearch;
+  const shouldPeel = (isLayerPeeled || isManuallyPeeled || isHiddenByIsolation) && !matchesSearch;
   const targetOpacity = shouldPeel ? 0 : (metadata.type === 'bone' ? 1 : 0.9);
 
+  // Create material (shared between both sides for bilateral)
   const material = useMemo(() => {
     return new THREE.MeshStandardMaterial({
       color: colors.default,
@@ -450,80 +340,97 @@ function StructureMesh({ structure }: StructureMeshProps) {
     });
   }, [colors.default, metadata.type]);
 
-  useFrame(() => {
-    if (!materialRef.current) return;
+  // Store ref for animation updates
+  // useEffect(() => {
+  //   if (materialRef.current !== material) {
+  //     materialRef.current = material;
+  //   }
+  // }, [material]);
 
+  // Animation frame updates
+  useFrame(() => {
+    // material is stable from useMemo, use it directly
     let targetColor = colors.default;
     if (matchesSearch) {
       targetColor = '#FFD700';
     } else if (isHighlighted && !shouldPeel) {
       targetColor = colors.highlight;
     }
-    materialRef.current.color.lerp(new THREE.Color(targetColor), 0.1);
+    material.color.lerp(new THREE.Color(targetColor), 0.1);
 
     animatedOpacity.current += (targetOpacity - animatedOpacity.current) * 0.08;
-    materialRef.current.opacity = animatedOpacity.current;
-    materialRef.current.depthWrite = animatedOpacity.current > 0.5;
+    material.opacity = animatedOpacity.current;
+    material.depthWrite = animatedOpacity.current > 0.5;
   });
 
+  // Early return if type not visible
   if (!isTypeVisible) return null;
 
-  // Base interactivity on render-time state, not animated opacity
-  // This ensures raycast updates immediately when peelDepth changes
   const isInteractive = !shouldPeel;
 
-  // Handle click with double-click detection for peeling
+  // Event handlers (shared for both sides)
+  const handlePointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    setHovered(true);
+    setHoveredStructure(metadata.meshId);
+    document.body.style.cursor = 'pointer';
+  }, [metadata.meshId, setHoveredStructure]);
+
+  const handlePointerOut = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    setHovered(false);
+    setHoveredStructure(null);
+    document.body.style.cursor = 'auto';
+  }, [setHoveredStructure]);
+
   const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
-    if (!isInteractive) return;
     e.stopPropagation();
 
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTime.current;
     lastClickTime.current = now;
 
-    // Double-click threshold: 300ms
     if (timeSinceLastClick < 300) {
-      // Double-click: toggle manual peel
+      // Double-click: toggle peel
       toggleManualPeel(metadata.meshId);
-      // Clear selection since structure is being peeled away
       setSelectedStructure(null);
     } else {
-      // Single click: toggle selection
+      // Single click: select/deselect
       setSelectedStructure(isSelected ? null : metadata.meshId);
     }
-  }, [isInteractive, isSelected, metadata.meshId, setSelectedStructure, toggleManualPeel]);
+  }, [isSelected, metadata.meshId, setSelectedStructure, toggleManualPeel]);
 
-  useEffect(() => {
-    if (isSelected) {
-      debugLog(metadata.meshId, 'SELECTED - Center:', center.toArray());
-    }
-  }, [isSelected, metadata.meshId, center]);
-
+  // Render one or two instances depending on bilateral flag
   return (
-    <mesh
-      ref={meshRef}
-      geometry={mesh.geometry}
-      // Note: We don't manipulate raycast prop directly as it can break Three.js internals.
-      // Instead, we rely on early returns in event handlers for non-interactive states.
-      // Performance impact is negligible since handlers exit immediately.
-      onPointerOver={(e) => {
-        if (!isInteractive) return;
-        e.stopPropagation();
-        setHovered(true);
-        setHoveredStructure(metadata.meshId);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={(e) => {
-        if (!isInteractive) return;
-        e.stopPropagation();
-        setHovered(false);
-        setHoveredStructure(null);
-        document.body.style.cursor = 'auto';
-      }}
-      onClick={handleClick}
-    >
-      <primitive object={material} ref={materialRef} attach="material" />
-    </mesh>
+    <>
+      {/* Primary (left) side */}
+      <MeshInstance
+        geometry={geometry}
+        worldMatrix={worldMatrix}
+        metadata={metadata}
+        isMirrored={false}
+        material={material}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+        onClick={handleClick}
+        isInteractive={isInteractive}
+      />
+
+      {/* Mirrored (right) side for bilateral structures */}
+      {metadata.bilateral && (
+        <MeshInstance
+          geometry={geometry}
+          worldMatrix={worldMatrix}
+          metadata={metadata}
+          isMirrored={true}
+          material={material}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+          onClick={handleClick}
+          isInteractive={isInteractive}
+        />
+      )}
+    </>
   );
 }
 
@@ -540,21 +447,18 @@ export function AnatomyModelGLTF() {
 
   const processedStructures = useMemo(() => {
     const structures: ProcessedStructure[] = [];
-    const processedMeshUuids = new Set<string>();  // Track by UUID, not metadata key
+    const processedMeshUuids = new Set<string>();
     let skippedByTypeOrName = 0;
     let skippedDuplicate = 0;
     let unmatchedCount = 0;
+    let bilateralCount = 0;
 
-    // Build side lookup map for efficient bilateral structure matching
-    const sideLookup = buildSideLookupMap(metadata.structures);
-
-    // Update world matrices for the entire scene hierarchy
     scene.updateMatrixWorld(true);
 
     if (DEBUG_ENABLED) {
       console.log('='.repeat(60));
-      console.log('[DEBUG] Processing anatomy model...');
-      console.log(`[DEBUG] Side lookup map has ${sideLookup.size} base names`);
+      console.log('[DEBUG] Processing anatomy model (V11 - Bilateral Mirroring)...');
+      console.log(`[DEBUG] Metadata has ${Object.keys(metadata.structures).length} structures`);
       console.log('='.repeat(60));
     }
 
@@ -562,17 +466,14 @@ export function AnatomyModelGLTF() {
       if (child instanceof THREE.Mesh) {
         const gltfMeshName = child.name;
 
-        // Skip if we've already processed this exact mesh instance
-        // Using UUID allows multi-primitive meshes (like hip bone) to all render
         if (processedMeshUuids.has(child.uuid)) {
           skippedDuplicate++;
           return;
         }
 
-        // Find matching metadata using smart position-based matching
-        const match = findMetadataForMesh(child, metadata.structures, sideLookup);
+        const structureData = findMetadataForMesh(gltfMeshName, metadata.structures);
 
-        if (!match) {
+        if (!structureData) {
           if (DEBUG_ENABLED) {
             console.log(`No match for mesh: ${gltfMeshName}`);
           }
@@ -580,24 +481,25 @@ export function AnatomyModelGLTF() {
           return;
         }
 
-        const structureData = match.data;
-
-        // Filter by type and name patterns
         if (!shouldRenderByTypeAndName(structureData)) {
           skippedByTypeOrName++;
           return;
         }
 
-        // Mark this specific mesh instance as processed
         processedMeshUuids.add(child.uuid);
 
-        // Use child.uuid as unique key for React (guaranteed unique per primitive)
         const processed = processGLTFMesh(child, structureData, child.uuid);
         structures.push(processed);
+
+        if (structureData.bilateral) {
+          bilateralCount++;
+        }
       }
     });
 
-    console.log(`Loaded ${structures.length} structures`);
+    console.log(`Loaded ${structures.length} unique meshes`);
+    console.log(`  Bilateral: ${bilateralCount} (renders as ${bilateralCount * 2} instances)`);
+    console.log(`  Total visual structures: ${structures.length + bilateralCount}`);
     console.log(`  Skipped: ${skippedByTypeOrName} (filtered), ${skippedDuplicate} (duplicate), ${unmatchedCount} (no metadata)`);
 
     return structures;
@@ -607,16 +509,41 @@ export function AnatomyModelGLTF() {
     setLoading(false);
   }, [setLoading]);
 
-  // Calculate model bounds from all structures
+  // Calculate model bounds (accounting for bilateral mirroring)
   const modelCenter = useMemo(() => {
     if (processedStructures.length === 0) {
       return new THREE.Vector3();
     }
 
     const box = new THREE.Box3();
-    processedStructures.forEach(({ mesh }) => {
-      const meshBox = new THREE.Box3().setFromObject(mesh);
+    const tempMesh = new THREE.Mesh();
+
+    processedStructures.forEach(({ geometry, worldMatrix, metadata }) => {
+      // Add primary side
+      tempMesh.geometry = geometry;
+      tempMesh.matrixAutoUpdate = false;
+      tempMesh.matrix.copy(worldMatrix);
+      tempMesh.updateMatrixWorld(true);
+
+      const meshBox = new THREE.Box3().setFromObject(tempMesh);
       box.union(meshBox);
+
+      // For bilateral, also account for mirrored side
+      if (metadata.bilateral) {
+        const mirrorMatrix = worldMatrix.clone();
+        const position = new THREE.Vector3();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        mirrorMatrix.decompose(position, quaternion, scale);
+        position.x = -position.x;
+        scale.x = -scale.x;
+        mirrorMatrix.compose(position, quaternion, scale);
+
+        tempMesh.matrix.copy(mirrorMatrix);
+        tempMesh.updateMatrixWorld(true);
+        const mirroredBox = new THREE.Box3().setFromObject(tempMesh);
+        box.union(mirroredBox);
+      }
     });
 
     return box.getCenter(new THREE.Vector3());
@@ -633,7 +560,7 @@ export function AnatomyModelGLTF() {
     >
       {processedStructures.map((structure) => (
         <StructureMesh
-          key={structure.uniqueKey}  // Use unique glTF mesh name, not metadata meshId
+          key={structure.uniqueKey}
           structure={structure}
         />
       ))}

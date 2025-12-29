@@ -48,6 +48,18 @@ interface AnatomyState {
    */
   manuallyPeeledIds: Set<string>;
 
+  /**
+   * Ordered history of manual peels (for undo functionality).
+   * Most recent peel is at the end.
+   */
+  peelHistory: string[];
+
+  /**
+   * When true, search results isolate the matched structure(s)
+   * by hiding non-matching, non-bone structures.
+   */
+  searchIsolationMode: boolean;
+
   // === UI State ===
   /** Whether the info panel is expanded */
   infoPanelOpen: boolean;
@@ -101,6 +113,14 @@ interface AnatomyActions {
   resetManualPeels: () => void;
   /** Get count of manually peeled structures */
   getManualPeelCount: () => number;
+  /** Undo the most recent manual peel */
+  undoLastPeel: () => void;
+
+  // === Search Isolation Actions ===
+  /** Toggle search isolation mode */
+  toggleSearchIsolation: () => void;
+  /** Set search isolation mode explicitly */
+  setSearchIsolationMode: (enabled: boolean) => void;
 
   // === UI Actions ===
   toggleInfoPanel: () => void;
@@ -143,6 +163,8 @@ export const useAnatomyStore = create<AnatomyStore>()(
     zoomLevel: 1,
     peelDepth: 0, // 0 = show all layers
     manuallyPeeledIds: new Set<string>(),
+    peelHistory: [],
+    searchIsolationMode: true, // Default: isolate when searching
     infoPanelOpen: false,
     settingsPanelOpen: false,
     searchQuery: '',
@@ -227,25 +249,50 @@ export const useAnatomyStore = create<AnatomyStore>()(
 
     // === Manual Peeling Actions ===
     toggleManualPeel: (id) => set((state) => {
-      const next = new Set(state.manuallyPeeledIds);
-      if (next.has(id)) {
-        next.delete(id);
+      const nextSet = new Set(state.manuallyPeeledIds);
+      let nextHistory = [...state.peelHistory];
+
+      if (nextSet.has(id)) {
+        // Restoring - remove from set and history
+        nextSet.delete(id);
+        nextHistory = nextHistory.filter(h => h !== id);
         console.log(`[PEEL] Restored: ${id}`);
       } else {
-        next.add(id);
+        // Peeling - add to set and history
+        nextSet.add(id);
+        nextHistory.push(id);
         console.log(`[PEEL] Peeled: ${id}`);
       }
-      return { manuallyPeeledIds: next };
+      return { manuallyPeeledIds: nextSet, peelHistory: nextHistory };
     }),
 
     isManuallyPeeled: (id) => _get().manuallyPeeledIds.has(id),
 
     resetManualPeels: () => {
       console.log('[PEEL] Reset all manual peels');
-      set({ manuallyPeeledIds: new Set<string>() });
+      set({ manuallyPeeledIds: new Set<string>(), peelHistory: [] });
     },
 
     getManualPeelCount: () => _get().manuallyPeeledIds.size,
+
+    undoLastPeel: () => set((state) => {
+      if (state.peelHistory.length === 0) return state;
+
+      const lastPeeled = state.peelHistory[state.peelHistory.length - 1];
+      const nextSet = new Set(state.manuallyPeeledIds);
+      nextSet.delete(lastPeeled);
+      const nextHistory = state.peelHistory.slice(0, -1);
+
+      console.log(`[PEEL] Undo: restored ${lastPeeled}`);
+      return { manuallyPeeledIds: nextSet, peelHistory: nextHistory };
+    }),
+
+    // === Search Isolation Actions ===
+    toggleSearchIsolation: () => set((state) => ({
+      searchIsolationMode: !state.searchIsolationMode
+    })),
+
+    setSearchIsolationMode: (enabled) => set({ searchIsolationMode: enabled }),
 
     // === UI Actions ===
     toggleInfoPanel: () => set((state) => ({
