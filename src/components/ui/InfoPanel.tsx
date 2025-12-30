@@ -3,6 +3,7 @@ import { useStructureExercises, useHasTier, type StructureExercise, ExerciseData
 import { isSupabaseConfigured } from '@/lib/supabase';
 import torsoMetadata from "@/data/body_metadata.json";
 import { useAuth } from '@/contexts/AuthContext';
+import Premium from './Premium';
 
 // Type for metadata structure (V11 - bilateral mirroring)
 interface StructureMetadata {
@@ -127,67 +128,6 @@ function ExerciseCard({ structureExercise }: { structureExercise: ExerciseData }
   );
 }
 
-// Premium upsell component
-function PremiumUpsell() {
-  const { user, loading, signInWithGoogle } = useAuth();
-
-  const handleUpgradeClick = async () => {
-    if (!user) {
-      // Not logged in → trigger Google OAuth
-      await signInWithGoogle();
-    } else {
-      // Logged in but no premium → subscription flow
-      // TODO: Implement Stripe checkout
-      console.log('Open subscription modal');
-    }
-  };
-
-
-
-  return (
-    <div className="bg-gradient-to-br from-accent-900/20 to-accent-800/10 rounded-lg p-4 border border-accent-700/30">
-      <div className="flex items-start gap-3">
-        <div className="p-2 bg-accent-600/20 rounded-lg">
-          <svg className="w-5 h-5 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <div className="flex-1">
-          <h4 className="text-sm font-semibold text-surface-100">
-            Unlock Exercise Library
-          </h4>
-          <p className="text-xs text-surface-400 mt-1">
-            {user
-              ? 'Upgrade to access exercises for every muscle, with video demonstrations.'
-              : 'Sign in for more in-depth information'
-            }
-          </p>
-          <button
-            className="mt-3 px-3 py-1.5 bg-accent-600 hover:bg-accent-500 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-2"
-            onClick={handleUpgradeClick}
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : user ? (
-              'Upgrade to Premium'
-            ) : (
-              <>
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
-                  <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                Sign in with Google
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Exercises section component
 function ExercisesSection({ meshId }: { meshId: string }) {
@@ -205,7 +145,7 @@ function ExercisesSection({ meshId }: { meshId: string }) {
         <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
           Exercises
         </h3>
-        <PremiumUpsell />
+        <Premium />
       </section>
     );
   }
@@ -331,7 +271,7 @@ export function InfoPanel() {
   const showExercises = ['muscle', 'tendon'].includes(structure.type);
 
   return (
-    <div className="absolute right-4 top-24 bottom-12 w-80 max-w-[calc(100vw-2rem)] overflow-hidden">
+    <div className="absolute right-4 top-24 bottom-24 w-80 max-w-[calc(100vw-2rem)] overflow-hidden">
       <div className="h-full bg-surface-900/95 backdrop-blur-xl rounded-2xl border border-surface-700/50 shadow-2xl shadow-black/30 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-surface-700/50">

@@ -40,17 +40,19 @@ export function PremiumUpsell({ feature = 'Exercise Library' }: PremiumUpsellPro
           </h4>
           <p className="text-xs text-surface-400 mt-1">
             {user
-              ? 'Upgrade to Premium to access exercises for every muscle, sorted by difficulty with video demonstrations.'
+              ? 'Upgrade to Premium to access exercises for every muscle with demonstrations, sorted by difficulty.'
               : 'Sign in to access premium features including exercises for every muscle with video demonstrations.'
             }
           </p>
-          <button
-            onClick={handleClick}
-            className="mt-3 px-3 py-1.5 bg-accent-600 hover:bg-accent-500 text-white text-xs font-medium rounded-lg transition-colors"
-          >
-            {user ? 'Upgrade to Premium' : 'Sign In'}
-          </button>
         </div>
+      </div>
+      <div className="flex justify-center">
+        <button
+          onClick={handleClick}
+          className="mt-2 px-3 py-1.5 bg-accent-600 hover:bg-accent-500 text-white text-xs font-medium rounded-lg transition-colors"
+        >
+          {user ? 'Upgrade to Premium' : 'Sign In'}
+        </button>
       </div>
     </div>
   );
