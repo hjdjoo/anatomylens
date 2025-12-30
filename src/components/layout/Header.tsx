@@ -1,3 +1,5 @@
+import UserMenu from "../ui/UserMenu";
+
 /**
  * Application header with branding.
  * Kept minimal to maximize viewport for 3D content.
@@ -18,7 +20,7 @@ export function Header() {
 
         {/* Right side actions could go here */}
         <div className="pointer-events-auto flex items-center gap-2">
-          {/* Placeholder for future features like search, settings, etc. */}
+          <UserMenu />
         </div>
       </div>
     </header>

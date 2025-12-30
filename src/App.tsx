@@ -2,12 +2,15 @@ import { AnatomyCanvas } from '@/components/viewer';
 import { InfoPanel, ViewControls } from '@/components/ui';
 import { Header } from '@/components/layout';
 
+
 /**
  * Main application component.
  * Combines the 3D viewer with UI overlays.
  */
 function App() {
+
   return (
+
     <div className="w-screen h-screen bg-surface-950 overflow-hidden relative">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-surface-900 via-surface-950 to-surface-950" />
@@ -31,7 +34,9 @@ function App() {
 
       {/* UI Overlays */}
       <Header />
-      <ViewControls />
+      <div>
+        <ViewControls />
+      </div>
       <InfoPanel />
 
       {/* Instructions overlay for first-time users */}
@@ -43,7 +48,7 @@ function App() {
               <span>Rotate</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <kbd className="px-1.5 py-0.5 bg-surface-800 rounded text-surface-300 font-mono">Right-Click + Drag</kbd>
+              <kbd className="px-1.5 py-0.5 bg-surface-800 rounded text-surface-300 font-mono">Alt-Click + Drag</kbd>
               <span>Pan</span>
             </span>
             <span className="text-surface-700">•</span>
@@ -60,6 +65,7 @@ function App() {
         </div>
       </div>
     </div>
+
   );
 }
 

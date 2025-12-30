@@ -36,7 +36,7 @@ git clone https://github.com/Z-Anatomy/Models-of-human-anatomy.git
 
 ```python
 # Change this line to your actual path:
-OUTPUT_DIR = "/path/to/your/anatomy-explorer/public/models"
+OUTPUT_DIR = "/path/to/your/bodyguide/public/models"
 ```
 
 ### Step 4: Run the Export Script

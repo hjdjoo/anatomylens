@@ -39,7 +39,7 @@ Anatomy Explorer is a web-based tool that allows users to explore human anatomy 
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd anatomy-explorer
+cd bodyguide
 
 # Install dependencies
 npm install
