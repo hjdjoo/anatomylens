@@ -1,17 +1,73 @@
 /**
- * Subscription Modal (Stubbed)
+ * Subscription Modal
  * 
- * Placeholder for subscription/payment flow.
- * TODO: Integrate with Stripe Checkout
+ * Handles subscription flow via Stripe Checkout.
  */
 
+import { useState } from 'react';
 import { Modal } from './Modal';
 import { useSubscriptionModal } from '@/store/modalStore';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export function SubscriptionModal() {
   const { isOpen, close } = useSubscriptionModal();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubscribe = async () => {
+    if (!user || !session || !supabase) {
+      setError('Please sign in to subscribe');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+
+      const jwt = (await supabase.auth.getSession()).data.session?.access_token
+
+      if (!jwt) {
+        throw new Error("No access token detected")
+      }
+
+      const {data: claimsData, error: claimsError} = await supabase.auth.getClaims(jwt);
+
+      if (claimsError || !claimsData) {
+        claimsError && console.error(claimsError.message)
+        throw new Error("Couldn't verify JWT")
+      }
+
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        headers: {
+          "Authorization": `Bearer ${jwt}`
+        },
+        body: {
+          successUrl: `${window.location.origin}/?subscription=success`,
+          cancelUrl: `${window.location.origin}/?subscription=canceled`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to create checkout session');
+      }
+
+      const { url } = response.data;
+
+      if (url) {
+        // Redirect to Stripe Checkout
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start checkout');
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={close} maxWidth="max-w-lg">
@@ -31,6 +87,13 @@ export function SubscriptionModal() {
           </p>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-900/20 border border-red-800/50 rounded-lg">
+            <p className="text-sm text-red-300">{error}</p>
+          </div>
+        )}
+
         {/* Features list */}
         <div className="space-y-3 mb-6">
           <Feature icon="💪" text="Exercises for every muscle group" />
@@ -42,21 +105,19 @@ export function SubscriptionModal() {
         {/* Price */}
         <div className="text-center p-4 bg-surface-800/50 rounded-xl mb-6">
           <div className="text-3xl font-bold text-surface-100">
-            $9<span className="text-lg font-normal text-surface-400">/month</span>
+            $1.99<span className="text-lg font-normal text-surface-400">/month</span>
           </div>
           <p className="text-xs text-surface-500 mt-1">Cancel anytime</p>
         </div>
 
         {/* CTA */}
         <button
-          onClick={() => {
-            // TODO: Implement Stripe checkout
-            console.log('Open Stripe checkout for user:', user?.email);
-            alert('Stripe checkout coming soon!');
-          }}
-          className="w-full px-4 py-3 bg-accent-600 hover:bg-accent-500 text-white font-medium rounded-xl transition-colors"
+          onClick={handleSubscribe}
+          disabled={loading}
+          className="w-full px-4 py-3 bg-accent-600 hover:bg-accent-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
         >
-          Subscribe Now
+          {loading && <LoadingSpinner />}
+          {loading ? 'Redirecting to Checkout...' : 'Subscribe Now'}
         </button>
 
         <p className="mt-4 text-center text-xs text-surface-500">
@@ -73,6 +134,15 @@ function Feature({ icon, text }: { icon: string; text: string }) {
       <span className="text-lg">{icon}</span>
       <span className="text-sm text-surface-300">{text}</span>
     </div>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
   );
 }
 

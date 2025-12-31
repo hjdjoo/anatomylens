@@ -9,15 +9,15 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import bodyMetadata from '../src/data/body_metadata.json';
+import bodyMetadata from '../src/data/body_metadata.json' with {type: "json"};
 
 import "@dotenvx/dotenvx/config"
 
-import { MetadataFile } from '../src/components/viewer/AnatomyModelGLTF'
+import { MetadataFile } from '../src/components/viewer/AnatomyModelGLTF.tsx'
 
 // Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY!;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_LOCAL_SECRET_KEY!;
 
 if (!SUPABASE_URL) {
   console.error('Missing environment variables: SUPABASE_URL');

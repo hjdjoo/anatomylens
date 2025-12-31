@@ -1,6 +1,6 @@
 # Blender Export Scripts
 
-This directory contains Python scripts for exporting anatomical models from Z-Anatomy into formats suitable for Anatomy Explorer.
+This directory contains Python scripts for exporting anatomical models from Z-Anatomy into formats suitable for BodyGuide.
 
 ## Prerequisites
 
@@ -156,7 +156,7 @@ The exported `.glb` file contains:
 }
 ```
 
-## Integrating with Anatomy Explorer
+## Integrating with BodyGuide
 
 After exporting, you'll need to:
 

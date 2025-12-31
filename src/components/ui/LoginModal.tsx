@@ -13,11 +13,11 @@ type AuthMode = 'signin' | 'signup';
 
 export function LoginModal() {
   const { isOpen, close } = useLoginModal();
-  const { 
-    error, 
-    clearError, 
-    signInWithGoogle, 
-    signInWithEmail, 
+  const {
+    error,
+    clearError,
+    signInWithGoogle,
+    signInWithEmail,
     signUpWithEmail,
     isConfigured,
   } = useAuth();
@@ -137,9 +137,9 @@ export function LoginModal() {
             {mode === 'signin' ? 'Welcome back' : 'Create an account'}
           </h2>
           <p className="text-sm text-surface-400 mt-1">
-            {mode === 'signin' 
-              ? 'Sign in to access your account' 
-              : 'Get started with Anatomy Explorer'
+            {mode === 'signin'
+              ? 'Sign in to access your account'
+              : 'Get started with BodyGuide'
             }
           </p>
         </div>

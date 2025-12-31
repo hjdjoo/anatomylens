@@ -1,10 +1,10 @@
-# Anatomy Explorer
+# BodyGuide
 
 Interactive 3D anatomy visualization for education and fitness.
 
 ## Overview
 
-Anatomy Explorer is a web-based tool that allows users to explore human anatomy through an interactive 3D model. It supports two view modes:
+BodyGuide is a web-based tool that allows users to explore human anatomy through an interactive 3D model. It supports two view modes:
 
 - **Fitness Mode**: Uses common names and practical descriptions targeted at fitness enthusiasts
 - **Clinical Mode**: Uses proper anatomical terminology for medical/educational use
