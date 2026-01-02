@@ -14,8 +14,6 @@ const DEPTH_LABELS = [
  */
 export function ViewControls() {
   const {
-    viewMode,
-    toggleViewMode,
     layerVisibility,
     toggleLayer,
     showAllLayers,

@@ -6,7 +6,7 @@ import { useAnatomyStore } from '@/store';
 import type { LayerVisibility } from '@/types';
 
 // Import the metadata
-import bodyMetadata from '@/data/body_metadata.json';
+import bodyMetadata from '@/data/body_metadata.json' with {type: "json"};
 
 // ============================================================
 // DEBUG CONFIGURATION
@@ -87,6 +87,9 @@ const TYPE_TO_VISIBILITY_KEY: Record<string, keyof LayerVisibility> = {
   membrane: 'ligaments',
   other: 'muscles',
 };
+
+// Double-click timing threshold (ms)
+const DOUBLE_CLICK_THRESHOLD = 300;
 
 // ============================================================
 // STRUCTURE FILTERING
@@ -182,8 +185,8 @@ function processGLTFMesh(
 ): ProcessedStructure {
   if (!hasLoggedMemoryStrategy) {
     hasLoggedMemoryStrategy = true;
-    console.log('[MEMORY] ✓ Using direct geometry references (no cloning)');
-    console.log('[MEMORY] ✓ Bilateral structures mirrored at runtime');
+    console.log('[MEMORY] ✔ Using direct geometry references (no cloning)');
+    console.log('[MEMORY] ✔ Bilateral structures mirrored at runtime');
   }
 
   const worldMatrix = child.matrixWorld.clone();
@@ -283,10 +286,12 @@ interface StructureMeshProps {
 
 function StructureMesh({ structure }: StructureMeshProps) {
   const { geometry, worldMatrix, metadata } = structure;
-  // const materialRef = useRef<THREE.MeshStandardMaterial>(null);
   const [hovered, setHovered] = useState(false);
   const animatedOpacity = useRef(1);
-  const lastClickTime = useRef(0);
+  
+  // Deferred selection pattern refs
+  const pendingSelectionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clickCount = useRef(0);
 
   const {
     hoveredStructureId,
@@ -340,16 +345,17 @@ function StructureMesh({ structure }: StructureMeshProps) {
     });
   }, [colors.default, metadata.type]);
 
-  // Store ref for animation updates
-  // useEffect(() => {
-  //   if (materialRef.current !== material) {
-  //     materialRef.current = material;
-  //   }
-  // }, [material]);
+  // Cleanup pending timer on unmount
+  useEffect(() => {
+    return () => {
+      if (pendingSelectionTimer.current) {
+        clearTimeout(pendingSelectionTimer.current);
+      }
+    };
+  }, []);
 
   // Animation frame updates
   useFrame(() => {
-    // material is stable from useMemo, use it directly
     let targetColor = colors.default;
     if (matchesSearch) {
       targetColor = '#FFD700';
@@ -383,20 +389,53 @@ function StructureMesh({ structure }: StructureMeshProps) {
     document.body.style.cursor = 'auto';
   }, [setHoveredStructure]);
 
+  /**
+   * Deferred selection click handler.
+   * 
+   * Instead of immediately selecting on first click (which opens InfoPanel
+   * and blocks the second click on mobile), we defer the selection:
+   * 
+   * 1. First click: Start a timer, increment click count
+   * 2. Second click within threshold: Cancel timer, execute peel
+   * 3. Timer expires: Execute the deferred selection
+   * 
+   * This ensures double-click/tap works even when InfoPanel would normally
+   * render an overlay that intercepts the second tap.
+   */
   const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
 
-    const now = Date.now();
-    const timeSinceLastClick = now - lastClickTime.current;
-    lastClickTime.current = now;
+    clickCount.current += 1;
+    const currentClickCount = clickCount.current;
 
-    if (timeSinceLastClick < 300) {
-      // Double-click: toggle peel
+    if (currentClickCount === 1) {
+      // First click: start deferred selection timer
+      pendingSelectionTimer.current = setTimeout(() => {
+        // Timer fired without second click - this is a single click
+        if (clickCount.current === 1) {
+          // Execute selection (opens InfoPanel)
+          setSelectedStructure(isSelected ? null : metadata.meshId);
+        }
+        // Reset click count
+        clickCount.current = 0;
+        pendingSelectionTimer.current = null;
+      }, DOUBLE_CLICK_THRESHOLD);
+    } else if (currentClickCount === 2) {
+      // Second click within threshold - this is a double click
+      // Cancel the pending selection
+      if (pendingSelectionTimer.current) {
+        clearTimeout(pendingSelectionTimer.current);
+        pendingSelectionTimer.current = null;
+      }
+      
+      // Execute peel action
       toggleManualPeel(metadata.meshId);
+      
+      // Clear selection if any (don't open InfoPanel on double-click)
       setSelectedStructure(null);
-    } else {
-      // Single click: select/deselect
-      setSelectedStructure(isSelected ? null : metadata.meshId);
+      
+      // Reset click count
+      clickCount.current = 0;
     }
   }, [isSelected, metadata.meshId, setSelectedStructure, toggleManualPeel]);
 

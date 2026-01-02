@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "supabase:types": "supabase gen types typescript --project-id jbsdhlzwkybwlgzhneqf --schema public > database.types.ts",
-    "supabase:functions": "supabase functions serve --no-verify-jwt  --env-file ./supabase/.env.local"
+    "supabase:functions-deploy": "supabase functions deploy --no-verify-jwt",
+    "supabase:functions-serve": "supabase functions serve --no-verify-jwt  --env-file ./supabase/.env.local"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.4",

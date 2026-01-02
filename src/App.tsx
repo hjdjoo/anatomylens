@@ -1,5 +1,5 @@
 import { AnatomyCanvas } from '@/components/viewer';
-import { InfoPanel, ViewControls } from '@/components/ui';
+import { InfoPanel, ResponsiveViewControls } from '@/components/ui';
 import { Header } from '@/components/layout';
 
 
@@ -35,7 +35,7 @@ function App() {
       {/* UI Overlays */}
       <Header />
       <div>
-        <ViewControls />
+        <ResponsiveViewControls />
       </div>
       <InfoPanel />
 
