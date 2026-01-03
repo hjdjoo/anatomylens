@@ -21,6 +21,8 @@ function debugLog(meshName: string, message: string, data?: unknown) {
   console.log(`[DEBUG ${meshName}] ${message}`, data ?? '');
 }
 
+debugLog("test call", "test call");
+
 // ============================================================
 // TYPES
 // ============================================================

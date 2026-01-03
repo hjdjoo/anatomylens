@@ -12,8 +12,13 @@
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from "node:url";
 
 import "@dotenvx/dotenvx/config";
+
+// console.log(__dirname)
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL!;
@@ -287,11 +292,11 @@ async function seedExercises() {
   console.log('='.repeat(60));
 
   // Load seed data
-  const seedPath = path.join(__dirname, 'exercise_seed_data.json');
+  const seedPath = path.join(__dirname, 'exercises.json');
 
   if (!fs.existsSync(seedPath)) {
     console.error(`Seed file not found: ${seedPath}`);
-    console.error('Please ensure exercise_seed_data.json is in the same directory');
+    console.error('Please ensure exercise_data.json is in the same directory');
     process.exit(1);
   }
 

@@ -17,7 +17,7 @@ import { MetadataFile } from '../src/components/viewer/AnatomyModelGLTF.tsx'
 
 // Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_LOCAL_SECRET_KEY!;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY!;
 
 if (!SUPABASE_URL) {
   console.error('Missing environment variables: SUPABASE_URL');

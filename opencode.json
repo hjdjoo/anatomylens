@@ -11,6 +11,16 @@
           "id": "qwen/qwen3-coder-30b",
           "reasoning": true,
           "tool_call": true
+        },
+        "qwen3-30b-a3b": {
+          "id": "qwen/qwen3-30b-a3b-2507",
+          "reasoning": true,
+          "tool_call": true
+        },
+        "deepseek-r1-qwen-8b": {
+          "id": "deepseek/deepseek-r1-0528-qwen3-8b",
+          "reasoning": true,
+          "tool_call": true,
         }
       }
     }
