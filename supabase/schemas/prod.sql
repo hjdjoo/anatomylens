@@ -22,10 +22,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
 
 
 
-
-
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
-
 
 
 
@@ -36,19 +33,12 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
 
 
 
-
-
 CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
 
 
 
 
-
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
-
-
-
 
 
 
@@ -66,12 +56,15 @@ begin
 end;
 $$;
 
-
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
 
 SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 
 CREATE TABLE IF NOT EXISTS "public"."exercises" (
@@ -102,27 +95,6 @@ CREATE TABLE IF NOT EXISTS "public"."exercises" (
 
 
 ALTER TABLE "public"."exercises" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."structure_clinical" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "structure_id" "uuid" NOT NULL,
-    "clinical_description" "text",
-    "attachments" "jsonb",
-    "innervation" "text",
-    "blood_supply" "text",
-    "common_injuries" "text"[],
-    "assessment_tests" "text"[],
-    "clinical_notes" "text",
-    "citations" "text"[],
-    "contributed_by" "uuid",
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
-);
-
-
-ALTER TABLE "public"."structure_clinical" OWNER TO "postgres";
-
 
 CREATE TABLE IF NOT EXISTS "public"."structure_exercises" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -158,6 +130,16 @@ CREATE TABLE IF NOT EXISTS "public"."structures" (
 ALTER TABLE "public"."structures" OWNER TO "postgres";
 
 
+
+ALTER TABLE ONLY "public"."structures"
+    ADD CONSTRAINT "structures_mesh_id_key" UNIQUE ("mesh_id");
+
+
+ALTER TABLE ONLY "public"."structures"
+    ADD CONSTRAINT "structures_pkey" PRIMARY KEY ("id");
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."user_profiles" (
     "id" "uuid" NOT NULL,
     "display_name" "text",
@@ -183,20 +165,35 @@ ALTER TABLE ONLY "public"."exercises"
     ADD CONSTRAINT "exercises_pkey" PRIMARY KEY ("id");
 
 
-
 ALTER TABLE ONLY "public"."exercises"
     ADD CONSTRAINT "exercises_slug_key" UNIQUE ("slug");
 
 
 
-ALTER TABLE ONLY "public"."structure_clinical"
-    ADD CONSTRAINT "structure_clinical_pkey" PRIMARY KEY ("id");
+CREATE TABLE IF NOT EXISTS "public"."structure_details" (
+  "id" "uuid" PRIMARY KEY DEFAULT "gen_random_uuid"() NOT NULL,
+  "structure_id" "uuid" NOT NULL REFERENCES "public"."structures"(id) ON DELETE CASCADE,
+  
+  -- Free tier data
+  "summary" "text",                    -- Short description (1-2 sentences)
+  "actions" "text"[],                  -- Muscle actions (e.g., ['flexes elbow', 'supinates forearm'])
+  
+  -- Premium tier data  
+  "description" "text",                -- Full clinical description
+  "attachments" "jsonb",               -- {origin: "...", insertion: "..."} for muscles
+  "innervation" "text",                -- Nerve supply
+  "articulations" "text",              -- Bone articulations (for bones only)
+  
+  -- Metadata
+  "source" "text"[],                     -- Attribution (e.g., "Z-Anatomy", "Wikipedia")
+  "created_at" TIMESTAMPTZ DEFAULT "now"(),
+  "updated_at" TIMESTAMPTZ DEFAULT "now"(),
+  
+  UNIQUE(structure_id)
+);
 
 
-
-ALTER TABLE ONLY "public"."structure_clinical"
-    ADD CONSTRAINT "structure_clinical_structure_id_key" UNIQUE ("structure_id");
-
+ALTER TABLE ONLY "public"."structure_details" OWNER TO "postgres";
 
 
 ALTER TABLE ONLY "public"."structure_exercises"
@@ -206,16 +203,6 @@ ALTER TABLE ONLY "public"."structure_exercises"
 
 ALTER TABLE ONLY "public"."structure_exercises"
     ADD CONSTRAINT "structure_exercises_structure_id_exercise_id_key" UNIQUE ("structure_id", "exercise_id");
-
-
-
-ALTER TABLE ONLY "public"."structures"
-    ADD CONSTRAINT "structures_mesh_id_key" UNIQUE ("mesh_id");
-
-
-
-ALTER TABLE ONLY "public"."structures"
-    ADD CONSTRAINT "structures_pkey" PRIMARY KEY ("id");
 
 
 
@@ -259,6 +246,7 @@ CREATE INDEX "idx_structures_region" ON "public"."structures" USING "btree" ("re
 
 CREATE INDEX "idx_structures_type" ON "public"."structures" USING "btree" ("type");
 
+CREATE INDEX idx_structure_details_structure_id ON "public"."structure_details" USING "btree"("structure_id");
 
 
 ALTER TABLE ONLY "public"."exercises"
@@ -268,17 +256,6 @@ ALTER TABLE ONLY "public"."exercises"
 
 ALTER TABLE ONLY "public"."exercises"
     ADD CONSTRAINT "exercises_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "auth"."users"("id");
-
-
-
-ALTER TABLE ONLY "public"."structure_clinical"
-    ADD CONSTRAINT "structure_clinical_contributed_by_fkey" FOREIGN KEY ("contributed_by") REFERENCES "auth"."users"("id");
-
-
-
-ALTER TABLE ONLY "public"."structure_clinical"
-    ADD CONSTRAINT "structure_clinical_structure_id_fkey" FOREIGN KEY ("structure_id") REFERENCES "public"."structures"("id") ON DELETE CASCADE;
-
 
 
 ALTER TABLE ONLY "public"."structure_exercises"
@@ -300,32 +277,23 @@ ALTER TABLE ONLY "public"."user_profiles"
     ADD CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
-
-CREATE POLICY "clinical_tier2_read" ON "public"."structure_clinical" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."user_profiles"
-  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."tier" >= 2)))));
-
-
-
 ALTER TABLE "public"."exercises" ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE "public"."structure_details" ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "exercises_paid_read" ON "public"."exercises" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."user_profiles"
   WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."tier" >= 1)))));
 
 
-
 CREATE POLICY "profiles_read_own" ON "public"."user_profiles" FOR SELECT USING (("auth"."uid"() = "id"));
-
 
 
 CREATE POLICY "profiles_update_own" ON "public"."user_profiles" FOR UPDATE USING (("auth"."uid"() = "id"));
 
-
-
-ALTER TABLE "public"."structure_clinical" ENABLE ROW LEVEL SECURITY;
-
+CREATE POLICY "free_tier_read" ON "public"."structure_details"
+  FOR SELECT
+  USING (true); -- Everyone can select
 
 ALTER TABLE "public"."structure_exercises" ENABLE ROW LEVEL SECURITY;
 
@@ -342,10 +310,7 @@ ALTER TABLE "public"."structures" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "structures_public_read" ON "public"."structures" FOR SELECT USING (true);
 
 
-
 ALTER TABLE "public"."user_profiles" ENABLE ROW LEVEL SECURITY;
-
-
 
 
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
@@ -535,9 +500,9 @@ GRANT ALL ON TABLE "public"."exercises" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."structure_clinical" TO "anon";
-GRANT ALL ON TABLE "public"."structure_clinical" TO "authenticated";
-GRANT ALL ON TABLE "public"."structure_clinical" TO "service_role";
+-- GRANT ALL ON TABLE "public"."structure_clinical" TO "anon";
+-- GRANT ALL ON TABLE "public"."structure_clinical" TO "authenticated";
+-- GRANT ALL ON TABLE "public"."structure_clinical" TO "service_role";
 
 
 
@@ -573,14 +538,10 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQ
 
 
 
-
-
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
-
-
 
 
 

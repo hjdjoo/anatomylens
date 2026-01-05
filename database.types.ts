@@ -86,55 +86,49 @@ export type Database = {
         }
         Relationships: []
       }
-      structure_clinical: {
+      structure_details: {
         Row: {
-          assessment_tests: string[] | null
+          actions: string[] | null
+          articulations: string | null
           attachments: Json | null
-          blood_supply: string | null
-          citations: string[] | null
-          clinical_description: string | null
-          clinical_notes: string | null
-          common_injuries: string[] | null
-          contributed_by: string | null
           created_at: string | null
+          description: string | null
           id: string
           innervation: string | null
+          source: string[] | null
           structure_id: string
+          summary: string | null
           updated_at: string | null
         }
         Insert: {
-          assessment_tests?: string[] | null
+          actions?: string[] | null
+          articulations?: string | null
           attachments?: Json | null
-          blood_supply?: string | null
-          citations?: string[] | null
-          clinical_description?: string | null
-          clinical_notes?: string | null
-          common_injuries?: string[] | null
-          contributed_by?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           innervation?: string | null
+          source?: string[] | null
           structure_id: string
+          summary?: string | null
           updated_at?: string | null
         }
         Update: {
-          assessment_tests?: string[] | null
+          actions?: string[] | null
+          articulations?: string | null
           attachments?: Json | null
-          blood_supply?: string | null
-          citations?: string[] | null
-          clinical_description?: string | null
-          clinical_notes?: string | null
-          common_injuries?: string[] | null
-          contributed_by?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           innervation?: string | null
+          source?: string[] | null
           structure_id?: string
+          summary?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "structure_clinical_structure_id_fkey"
+            foreignKeyName: "structure_details_structure_id_fkey"
             columns: ["structure_id"]
             isOneToOne: true
             referencedRelation: "structures"
@@ -228,6 +222,59 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      user_exercises: {
+        Row: {
+          added_at: string | null
+          exercise_id: string
+          folder_id: string | null
+          id: string
+          notes: string | null
+          reps: number | null
+          rest_seconds: number | null
+          sets: number | null
+          sort_order: number | null
+          updated_at: string | null
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          added_at?: string | null
+          exercise_id: string
+          folder_id?: string | null
+          id?: string
+          notes?: string | null
+          reps?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          added_at?: string | null
+          exercise_id?: string
+          folder_id?: string | null
+          id?: string
+          notes?: string | null
+          reps?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {

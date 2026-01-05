@@ -6,18 +6,17 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLoginModal, useSubscriptionModal } from '@/store/modalStore';
+import { useLoginModal, useSubscriptionModal, useLibraryModal } from '@/store/modalStore';
 import { useHasTier } from '@/hooks/useAnatomyData';
-import { supabase } from '@/lib/supabase';
 
 export function UserMenu() {
   const { user, loading, signOut, isConfigured } = useAuth();
   const { open: openLogin } = useLoginModal();
   const { open: openSubscription } = useSubscriptionModal();
+  const { open: openLibrary } = useLibraryModal();
   const { hasTier, loading: tierLoading } = useHasTier(1);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -31,34 +30,6 @@ export function UserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle opening Stripe Customer Portal
-  const handleManageBilling = async () => {
-    if (!supabase) return;
-
-    setPortalLoading(true);
-    try {
-      const response = await supabase.functions.invoke('create-portal-session', {
-        body: {
-          returnUrl: window.location.href,
-        },
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to open billing portal');
-      }
-
-      const { url } = response.data;
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (err) {
-      console.error('Portal error:', err);
-      alert('Failed to open billing portal. Please try again.');
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
   // Don't render if Supabase not configured
   if (!isConfigured) return null;
 
@@ -67,7 +38,7 @@ export function UserMenu() {
     return <div className="w-8 h-8 rounded-full bg-surface-800 animate-pulse" />;
   }
 
-  // Not logged in → Sign In button
+  // Not logged in â†’ Sign In button
   if (!user) {
     return (
       <button
@@ -79,7 +50,7 @@ export function UserMenu() {
     );
   }
 
-  // Logged in but not premium → Subscribe CTA + dropdown
+  // Logged in but not premium â†’ Subscribe CTA + dropdown
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
   const avatarUrl = user.user_metadata?.avatar_url;
 
@@ -129,30 +100,23 @@ export function UserMenu() {
 
             {/* Menu items */}
             <div className="p-1">
-              {hasTier ? (
-                // Premium user: show Manage Billing
+              {/* My Library (only show for premium users) */}
+              {hasTier && (
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    handleManageBilling();
+                    openLibrary();
                   }}
-                  disabled={portalLoading}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-surface-400 hover:text-surface-200 hover:bg-surface-800 rounded-lg transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-surface-400 hover:text-surface-200 hover:bg-surface-800 rounded-lg transition-colors"
                 >
-                  {portalLoading ? (
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                  )}
-                  Manage Billing
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  My Library
                 </button>
-              ) : (
-                // Free user: show Upgrade option
+              )}
+
+              {!hasTier && (
                 <button
                   onClick={() => {
                     setIsOpen(false);

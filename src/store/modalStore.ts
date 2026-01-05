@@ -11,7 +11,7 @@ import { create } from 'zustand';
 // TYPES
 // ============================================================
 
-export type ModalType = 'login' | 'subscription' | null;
+export type ModalType = 'login' | 'subscription' | 'library' | null;
 
 interface ModalState {
   activeModal: ModalType;
@@ -49,6 +49,16 @@ export function useSubscriptionModal() {
   return {
     isOpen: activeModal === 'subscription',
     open: () => openModal('subscription'),
+    close: closeModal,
+  };
+}
+
+
+export function useLibraryModal() {
+  const { activeModal, openModal, closeModal } = useModalStore();
+  return {
+    isOpen: activeModal === 'library',
+    open: () => openModal('library'),
     close: closeModal,
   };
 }
