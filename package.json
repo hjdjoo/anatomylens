@@ -16,7 +16,8 @@
     "supabase:seed": "npm run supabase:seed-structures && npm run supabase:seed-structure-details && npm run supabase:seed-exercises",
     "supabase:functions-deploy": "supabase functions deploy --no-verify-jwt",
     "supabase:functions-serve": "supabase functions serve --no-verify-jwt  --env-file ./supabase/.env.local",
-    "stripe:listen": "stripe listen --forward-to localhost:54321/functions/v1/stripe-webhook"
+    "stripe:listen": "stripe listen --forward-to localhost:54321/functions/v1/stripe-webhook",
+    "start:functions": "npm run supabase:functions-serve && npm run stripe:listen"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.4",

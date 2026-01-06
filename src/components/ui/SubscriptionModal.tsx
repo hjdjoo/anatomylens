@@ -97,7 +97,7 @@ export function SubscriptionModal() {
         {/* Features list */}
         <div className="space-y-3 mb-6">
           <Feature icon="💪" text="Exercises for every muscle group" />
-          <Feature icon="🎬" text="Video demonstrations" />
+          {/* <Feature icon="🎬" text="Video demonstrations" /> */}
           <Feature icon="📊" text="Difficulty ratings & progressions" />
           <Feature icon="🔬" text="Clinical details & attachments" />
         </div>

@@ -160,7 +160,6 @@ CREATE TABLE IF NOT EXISTS "public"."user_profiles" (
 
 ALTER TABLE "public"."user_profiles" OWNER TO "postgres";
 
-
 ALTER TABLE ONLY "public"."exercises"
     ADD CONSTRAINT "exercises_pkey" PRIMARY KEY ("id");
 

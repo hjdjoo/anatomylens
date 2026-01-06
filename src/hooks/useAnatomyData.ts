@@ -2,8 +2,9 @@
  * React hooks for fetching anatomy-related data from Supabase
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { useHasTier, useUserProfile } from './useUserProfile';
 
 import { Tables } from 'database.types';
 
@@ -15,13 +16,14 @@ export type Exercise = Tables<"exercises">
 
 export type StructureExercise = Tables<"structure_exercises">
 
-export type UserProfile = {
-  id: string;
-  display_name: string | null;
-  tier: number;
-  subscription_status: string | null;
-  subscription_ends_at: string | null;
-}
+// export type UserProfile = {
+//   id: string;
+//   display_name: string | null;
+//   tier: number;
+//   subscription_status: string | null;
+//   subscription_ends_at: string | null;
+//   weight_unit: 'lbs' | 'kg' | string;
+// }
 
 export type ExerciseData = {
   exercise: Exercise;
@@ -51,75 +53,90 @@ export type StructureDetails = {
 }
 
 // ============================================================
-// USER PROFILE HOOK
+// UTILITY: DEBOUNCE HOOK
 // ============================================================
 
-export function useUserProfile() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export function useDebouncedCallback<T extends (...args: any[]) => unknown>(
+  callback: T,
+  delay: number
+): T {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const callbackRef = useRef(callback);
 
+  // Update callback ref on each render
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
+    callbackRef.current = callback;
+  }, [callback]);
+
+  const debouncedFn = useCallback((...args: Parameters<T>) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
+    timeoutRef.current = setTimeout(() => {
+      callbackRef.current(...args);
+    }, delay);
+  }, [delay]) as T;
 
-    async function fetchProfile() {
-      if (!supabase) {
-          setLoading(false);
-          return;
-        }
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('id, display_name, tier, subscription_status, subscription_ends_at')
-          .eq('id', user.id)
-          .single();
-
-        if (error) throw error;
-        setProfile(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch profile'));
-      } finally {
-        setLoading(false);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
-    }
-
-    fetchProfile();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchProfile();
-    });
-
-    return () => subscription.unsubscribe();
+    };
   }, []);
 
-  return { profile, loading, error, isAuthenticated: !!profile };
+  return debouncedFn;
 }
 
 // ============================================================
-// TIER CHECK HOOK
+// UTILITY: TIME PARSING
 // ============================================================
 
-export function useHasTier(requiredTier: number) {
-  const { profile, loading } = useUserProfile();
-
-  return {
-    hasTier: profile ? profile.tier >= requiredTier : false,
-    loading,
-    currentTier: profile?.tier ?? 0,
-  };
+/**
+ * Parse mm:ss or plain seconds string to total seconds
+ * @example "1:30" -> 90, "90" -> 90, "2:00" -> 120
+ */
+export function parseRestTime(input: string): number | null {
+  if (!input || input.trim() === '') return null;
+  
+  const trimmed = input.trim();
+  
+  // Check for mm:ss format
+  if (trimmed.includes(':')) {
+    const parts = trimmed.split(':');
+    if (parts.length !== 2) return null;
+    
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    
+    if (isNaN(minutes) || isNaN(seconds)) return null;
+    if (seconds < 0 || seconds > 59) return null;
+    if (minutes < 0) return null;
+    
+    return minutes * 60 + seconds;
+  }
+  
+  // Plain seconds
+  const seconds = parseInt(trimmed, 10);
+  if (isNaN(seconds) || seconds < 0) return null;
+  
+  return seconds;
 }
+
+/**
+ * Format seconds to mm:ss string
+ * @example 90 -> "1:30", 120 -> "2:00", 45 -> "0:45"
+ */
+export function formatRestTime(seconds: number | null): string {
+  if (seconds === null || seconds === undefined) return '';
+  
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 
 // ============================================================
 // EXERCISES FOR STRUCTURE HOOK
@@ -393,6 +410,8 @@ export type UserExercise = {
   notes: string | null;
   sets: number | null;
   reps: number | null;
+  weight: number | null;
+  rest_seconds: number | null;
   added_at: string | null;
 }
 
@@ -400,6 +419,15 @@ export type SavedExerciseWithDetails = {
   userExercise: UserExercise;
   exercise: Exercise;
   region: string | null; // From structure for grouping
+}
+
+// Fields that can be updated on a user exercise
+export type UserExerciseUpdate = {
+  sets?: number;
+  reps?: number;
+  weight?: number;
+  rest_seconds?: number;
+  notes?: string;
 }
 
 // ============================================================
@@ -411,7 +439,9 @@ export function useUserExercises() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set()); // Track which are saving
   const { hasTier } = useHasTier(1);
+  const { profile } = useUserProfile();
 
   // Fetch all saved exercises for the user
   const fetchSavedExercises = useCallback(async () => {
@@ -442,6 +472,8 @@ export function useUserExercises() {
           notes,
           sets,
           reps,
+          weight,
+          rest_seconds,
           added_at,
           exercise:exercises (
             id,
@@ -482,9 +514,10 @@ export function useUserExercises() {
           .eq('involvement', 'primary');
 
         if (structureData) {
-          structureData.forEach((se: any) => {
-            if (se.structure?.region && !regionMap[se.exercise_id]) {
-              regionMap[se.exercise_id] = se.structure.region;
+          structureData.forEach((se: unknown) => {
+            const seTyped = se as { exercise_id: string; structure: { region: string } | null };
+            if (seTyped.structure?.region && !regionMap[seTyped.exercise_id]) {
+              regionMap[seTyped.exercise_id] = seTyped.structure.region;
             }
           });
         }
@@ -492,20 +525,36 @@ export function useUserExercises() {
 
       // Transform data
       const transformed: SavedExerciseWithDetails[] = (data || [])
-        .filter((row: any) => row.exercise)
-        .map((row: any) => ({
-          userExercise: {
-            id: row.id,
-            user_id: row.user_id,
-            exercise_id: row.exercise_id,
-            notes: row.notes,
-            sets: row.sets,
-            reps: row.reps,
-            added_at: row.added_at,
-          },
-          exercise: row.exercise as Exercise,
-          region: regionMap[row.exercise_id] || 'other',
-        }));
+        .filter((row: unknown) => (row as { exercise: unknown }).exercise)
+        .map((row: unknown) => {
+          const rowTyped = row as {
+            id: string;
+            user_id: string;
+            exercise_id: string;
+            notes: string | null;
+            sets: number | null;
+            reps: number | null;
+            weight: number | null;
+            rest_seconds: number | null;
+            added_at: string | null;
+            exercise: Exercise;
+          };
+          return {
+            userExercise: {
+              id: rowTyped.id,
+              user_id: rowTyped.user_id,
+              exercise_id: rowTyped.exercise_id,
+              notes: rowTyped.notes,
+              sets: rowTyped.sets,
+              reps: rowTyped.reps,
+              weight: rowTyped.weight,
+              rest_seconds: rowTyped.rest_seconds,
+              added_at: rowTyped.added_at,
+            },
+            exercise: rowTyped.exercise as Exercise,
+            region: regionMap[rowTyped.exercise_id] || 'other',
+          };
+        });
 
       setSavedExercises(transformed);
       setSavedIds(new Set(transformed.map(e => e.exercise.id)));
@@ -529,6 +578,49 @@ export function useUserExercises() {
 
     return () => subscription.unsubscribe();
   }, [fetchSavedExercises]);
+
+  // Update a user exercise (debounced in component, raw here)
+  const updateUserExercise = useCallback(async (
+    userExerciseId: string,
+    updates: UserExerciseUpdate
+  ): Promise<void> => {
+    if (!supabase) return;
+
+    // Mark as saving
+    setSavingIds(prev => new Set(prev).add(userExerciseId));
+
+    try {
+      const { error: updateError } = await supabase
+        .from('user_exercises')
+        .update(updates)
+        .eq('id', userExerciseId);
+
+      if (updateError) throw updateError;
+
+      // Update local state optimistically
+      setSavedExercises(prev => prev.map(item => {
+        if (item.userExercise.id === userExerciseId) {
+          return {
+            ...item,
+            userExercise: {
+              ...item.userExercise,
+              ...updates,
+            },
+          };
+        }
+        return item;
+      }));
+    } catch (err) {
+      console.error('Error updating exercise:', err);
+      throw err;
+    } finally {
+      setSavingIds(prev => {
+        const next = new Set(prev);
+        next.delete(userExerciseId);
+        return next;
+      });
+    }
+  }, []);
 
   // Toggle save/unsave an exercise
   const toggleSave = useCallback(async (exerciseId: string): Promise<boolean> => {
@@ -584,6 +676,11 @@ export function useUserExercises() {
     return savedIds.has(exerciseId);
   }, [savedIds]);
 
+  // Check if a specific exercise is currently saving
+  const isSaving = useCallback((userExerciseId: string): boolean => {
+    return savingIds.has(userExerciseId);
+  }, [savingIds]);
+
   return {
     savedExercises,
     savedIds,
@@ -592,6 +689,117 @@ export function useUserExercises() {
     hasTier,
     toggleSave,
     isSaved,
+    isSaving,
+    updateUserExercise,
     refetch: fetchSavedExercises,
+    weightUnit: profile?.weight_unit || 'lbs',
   };
+}
+
+// ============================================================
+// EXPORT UTILITIES
+// ============================================================
+
+/**
+ * Generate CSV content from saved exercises
+ */
+export function generateExerciseCSV(
+  exercises: SavedExerciseWithDetails[],
+  weightUnit: 'lbs' | 'kg' | string
+): string {
+  const headers = ['Exercise', 'Region', 'Sets', 'Reps', `Weight (${weightUnit})`, 'Rest', 'Notes'];
+  
+  const rows = exercises.map(({ exercise, userExercise, region }) => [
+    // Escape quotes in exercise name
+    `"${exercise.name.replace(/"/g, '""')}"`,
+    region || '',
+    userExercise.sets ?? '',
+    userExercise.reps ?? '',
+    userExercise.weight ?? '',
+    userExercise.rest_seconds ? formatRestTime(userExercise.rest_seconds) : '',
+    // Escape quotes and newlines in notes
+    userExercise.notes ? `"${userExercise.notes.replace(/"/g, '""').replace(/\n/g, ' ')}"` : '',
+  ]);
+
+  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
+
+/**
+ * Generate plain text workout summary
+ */
+export function generateExerciseText(
+  exercises: SavedExerciseWithDetails[],
+  weightUnit: 'lbs' | 'kg' | string
+): string {
+  const lines: string[] = ['My Workout', '='.repeat(40), ''];
+
+  // Group by region
+  const byRegion: Record<string, SavedExerciseWithDetails[]> = {};
+  exercises.forEach(e => {
+    const region = e.region || 'Other';
+    if (!byRegion[region]) byRegion[region] = [];
+    byRegion[region].push(e);
+  });
+
+  Object.entries(byRegion).forEach(([region, items]) => {
+    lines.push(`## ${region.replace(/_/g, ' ').toUpperCase()}`);
+    lines.push('');
+    
+    items.forEach(({ exercise, userExercise }) => {
+      const parts: string[] = [exercise.name];
+      
+      if (userExercise.sets || userExercise.reps) {
+        const setsReps = [
+          userExercise.sets ? `${userExercise.sets} sets` : '',
+          userExercise.reps ? `${userExercise.reps} reps` : '',
+        ].filter(Boolean).join(' x ');
+        if (setsReps) parts.push(`- ${setsReps}`);
+      }
+      
+      if (userExercise.weight) {
+        parts.push(`@ ${userExercise.weight} ${weightUnit}`);
+      }
+      
+      if (userExercise.rest_seconds) {
+        parts.push(`(rest: ${formatRestTime(userExercise.rest_seconds)})`);
+      }
+      
+      lines.push(parts.join(' '));
+      
+      if (userExercise.notes) {
+        lines.push(`   Notes: ${userExercise.notes}`);
+      }
+      lines.push('');
+    });
+  });
+
+  return lines.join('\n');
+}
+
+/**
+ * Download a string as a file
+ */
+export function downloadAsFile(content: string, filename: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Copy text to clipboard
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.error('Failed to copy to clipboard:', err);
+    return false;
+  }
 }

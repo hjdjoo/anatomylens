@@ -40,8 +40,8 @@ export function PremiumUpsell({ feature = 'Exercise Library' }: PremiumUpsellPro
           </h4>
           <p className="text-xs text-surface-400 mt-1">
             {user
-              ? 'Upgrade to Premium to access exercises for every muscle with demonstrations, sorted by difficulty.'
-              : 'Sign in to access premium features including exercises for every muscle with video demonstrations.'
+              ? 'Upgrade to Premium to access exercises and clinical details for every muscle with and create your own exercise library.'
+              : 'Sign in to access premium features including exercises for every muscle and create your own exercise library.'
             }
           </p>
         </div>

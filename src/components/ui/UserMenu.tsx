@@ -7,7 +7,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLoginModal, useSubscriptionModal, useLibraryModal } from '@/store/modalStore';
-import { useHasTier } from '@/hooks/useAnatomyData';
+import { useHasTier } from '@/hooks/useUserProfile';
 
 export function UserMenu() {
   const { user, loading, signOut, isConfigured } = useAuth();

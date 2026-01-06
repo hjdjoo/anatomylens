@@ -6,7 +6,8 @@
  */
 
 import { useLibraryModal } from '@/store/modalStore';
-import { useHasTier, useUserExercises } from '@/hooks/useAnatomyData';
+import { useUserExercises } from '@/hooks/useAnatomyData';
+import { useHasTier } from '@/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function LibraryFAB() {
@@ -29,7 +30,7 @@ export function LibraryFAB() {
   return (
     <button
       onClick={openLibrary}
-      className="fixed bottom-6 right-6 z-40 group"
+      className="fixed bottom-12 left-3 md:left-6 z-40 group"
       title="My Exercise Library"
     >
       <div className="relative">

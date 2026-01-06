@@ -290,6 +290,7 @@ export type Database = {
           subscription_status: string | null
           tier: number
           updated_at: string | null
+          weight_unit: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -304,6 +305,7 @@ export type Database = {
           subscription_status?: string | null
           tier?: number
           updated_at?: string | null
+          weight_unit?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -318,6 +320,7 @@ export type Database = {
           subscription_status?: string | null
           tier?: number
           updated_at?: string | null
+          weight_unit?: string | null
         }
         Relationships: []
       }

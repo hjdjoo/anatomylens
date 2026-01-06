@@ -39,7 +39,6 @@ export function ViewControls() {
     { key: 'muscles', label: 'Muscles', color: 'bg-anatomy-muscle' },
     { key: 'tendons', label: 'Tendons', color: 'bg-anatomy-tendon' },
     { key: 'ligaments', label: 'Ligaments', color: 'bg-anatomy-ligament' },
-    { key: 'fascia', label: 'Fascia', color: 'bg-anatomy-fascia' },
     { key: 'organs', label: 'Organs', color: 'bg-anatomy-organ' },
   ];
 
@@ -221,39 +220,6 @@ export function ViewControls() {
           </div>
         )}
       </div>
-
-      {/* View Mode Toggle */}
-      {/* <div className="bg-surface-900/95 backdrop-blur-xl rounded-xl border border-surface-700/50 p-3 shadow-lg">
-        <div className="text-xs font-semibold text-surface-400 uppercase tracking-wide mb-2">
-          View Mode
-        </div>
-        <div className="flex rounded-lg bg-surface-800 p-1">
-          <button
-            onClick={() => viewMode !== 'fitness' && toggleViewMode()}
-            className={`
-              flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all
-              ${viewMode === 'fitness'
-                ? 'bg-surface-700 text-surface-100 shadow'
-                : 'text-surface-400 hover:text-surface-300'
-              }
-            `}
-          >
-            Fitness
-          </button>
-          <button
-            onClick={() => viewMode !== 'clinical' && toggleViewMode()}
-            className={`
-              flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all
-              ${viewMode === 'clinical'
-                ? 'bg-surface-700 text-surface-100 shadow'
-                : 'text-surface-400 hover:text-surface-300'
-              }
-            `}
-          >
-            Clinical
-          </button>
-        </div>
-      </div> */}
 
       {/* Layer Visibility */}
       <div className="bg-surface-900/95 backdrop-blur-xl rounded-xl border border-surface-700/50 p-3 shadow-lg">
