@@ -26,9 +26,9 @@ export function useUserProfile() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-      if (!user) {
+      if (!user || userError) {
         setProfile(null);
         setLoading(false);
         return;
@@ -45,6 +45,7 @@ export function useUserProfile() {
         ...data,
         weight_unit: data.weight_unit || 'lbs', // Default fallback
       });
+      
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch profile'));
     } finally {

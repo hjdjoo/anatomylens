@@ -48,17 +48,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('[Auth] Session error:', error);
-        setError(error);
+    (async ()=>{
+      
+      const {data: {session}, error: sessionError} = await supabase!.auth.getSession();
+
+      if (sessionError) {
+        console.error('[Auth] Session error:', sessionError);
+        setError(sessionError);
       } else {
-        setSession(session);
-        setUser(session?.user ?? null);
+
+        const {data: {user}, error: userError} = await supabase
+          .auth
+          .getUser(session?.access_token);
+
+        if (userError) {
+          console.error(`[Auth] User Error: Could not fetch user`, userError);
+          setError(sessionError);
+          setUser(null);
+          setLoading(false);
+          await supabase.auth.signOut();
+        } else {
+          setError(null);
+          setUser(user);
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+
+    })()
+
+
+    // Get initial session
+    // supabase.auth.getSession().then(({ data: { session }, error }) => {
+    //   if (error) {
+    //     console.error('[Auth] Session error:', error);
+    //     setError(error);
+    //   } else {
+    //     setSession(session);
+    //     setUser(session?.user ?? null);
+    //   }
+    //   setLoading(false);
+    // });
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

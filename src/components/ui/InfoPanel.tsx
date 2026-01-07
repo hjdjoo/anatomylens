@@ -3,7 +3,8 @@ import { useAnatomyStore } from '@/store';
 import { useStructureExercises, useStructureDetails, useUserExercises, type StructureExercise, type ExerciseData, type ExerciseSortMode } from '@/hooks/useAnatomyData';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import torsoMetadata from "@/data/body_metadata.json";
-import Premium from './Premium';
+import Premium, { PremiumUpsell } from './Premium';
+import { CommunitySuggestions } from '../features/communitySuggestions';
 
 // Type for metadata structure (V11 - bilateral mirroring)
 interface StructureMetadata {
@@ -206,10 +207,19 @@ function StructureDetailsSection({ meshId }: { meshId: string }) {
 
   // Error or no details
   if (error || !details) {
-    return null;
+    return (
+    <section className="space-y-3">
+         <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
+            Summary
+          </h3>
+          <PremiumUpsell/>
+        </div>
+      </section>
+      );
   }
 
-  const hasFreeTierContent = details.summary || (details.actions && details.actions.length > 0);
+  const hasFreeTierContent = details.summary;
   const hasPremiumContent = details.description || details.innervation || details.attachments || details.articulations;
 
   if (!hasFreeTierContent && !hasPremiumContent) {
@@ -390,7 +400,6 @@ function ExercisesSection({ meshId }: { meshId: string }) {
     );
   }
 
-
   // Show upsell if user doesn't have tier 1
   if (!hasTier) {
     return (
@@ -402,7 +411,6 @@ function ExercisesSection({ meshId }: { meshId: string }) {
       </section>
     );
   }
-
 
   // No exercises available
   if (exercises.length === 0) {
@@ -641,6 +649,16 @@ export function InfoPanel() {
           {showExercises && (
             <div className="pt-4 border-t border-surface-800">
               <ExercisesSection meshId={selectedStructureId!} />
+            </div>
+          )}
+
+          {/* Community Suggestions section (only for muscles/tendons, premium users) */}
+          {showExercises && (
+            <div className="pt-4 border-t border-surface-800">
+              <CommunitySuggestions 
+                meshId={selectedStructureId!} 
+                structureName={displayName}
+              />
             </div>
           )}
 

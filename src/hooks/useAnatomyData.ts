@@ -157,7 +157,7 @@ export function useStructureExercises(
   const { hasTier } = useHasTier(1);
 
   const fetchExercises = useCallback(async () => {
-    if (!supabase || !meshId || !enabled) {
+    if (!supabase || !meshId || !enabled || !hasTier) {
       setExercises([]);
       return;
     }
@@ -445,7 +445,7 @@ export function useUserExercises() {
 
   // Fetch all saved exercises for the user
   const fetchSavedExercises = useCallback(async () => {
-    if (!supabase) {
+    if (!supabase || !profile || !hasTier) {
       setLoading(false);
       return;
     }

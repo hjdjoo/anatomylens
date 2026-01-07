@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      exercise_suggestions: {
+        Row: {
+          contributor_name: string | null
+          created_at: string | null
+          description: string | null
+          difficulty: number
+          downvotes: number
+          equipment: string[] | null
+          id: string
+          name: string
+          promoted_at: string | null
+          promoted_exercise_id: string | null
+          rejection_reason: string | null
+          status: string
+          suggested_by: string
+          updated_at: string | null
+          upvotes: number
+          video_url: string | null
+        }
+        Insert: {
+          contributor_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty: number
+          downvotes?: number
+          equipment?: string[] | null
+          id?: string
+          name: string
+          promoted_at?: string | null
+          promoted_exercise_id?: string | null
+          rejection_reason?: string | null
+          status?: string
+          suggested_by: string
+          updated_at?: string | null
+          upvotes?: number
+          video_url?: string | null
+        }
+        Update: {
+          contributor_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: number
+          downvotes?: number
+          equipment?: string[] | null
+          id?: string
+          name?: string
+          promoted_at?: string | null
+          promoted_exercise_id?: string | null
+          rejection_reason?: string | null
+          status?: string
+          suggested_by?: string
+          updated_at?: string | null
+          upvotes?: number
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_suggestions_promoted_exercise_id_fkey"
+            columns: ["promoted_exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           category: string | null
@@ -223,6 +288,80 @@ export type Database = {
         }
         Relationships: []
       }
+      suggestion_structures: {
+        Row: {
+          created_at: string | null
+          id: string
+          involvement: string
+          notes: string | null
+          structure_id: string
+          suggestion_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          involvement: string
+          notes?: string | null
+          structure_id: string
+          suggestion_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          involvement?: string
+          notes?: string | null
+          structure_id?: string
+          suggestion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_structures_structure_id_fkey"
+            columns: ["structure_id"]
+            isOneToOne: false
+            referencedRelation: "structures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestion_structures_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggestion_votes: {
+        Row: {
+          created_at: string | null
+          suggestion_id: string
+          updated_at: string | null
+          user_id: string
+          vote: number
+        }
+        Insert: {
+          created_at?: string | null
+          suggestion_id: string
+          updated_at?: string | null
+          user_id: string
+          vote: number
+        }
+        Update: {
+          created_at?: string | null
+          suggestion_id?: string
+          updated_at?: string | null
+          user_id?: string
+          vote?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_exercises: {
         Row: {
           added_at: string | null
@@ -329,7 +468,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_suggestion_rate_limit: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      get_structure_suggestions: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_structure_id: string
+          p_user_id: string
+        }
+        Returns: {
+          contributor_name: string
+          created_at: string
+          description: string
+          difficulty: number
+          downvotes: number
+          equipment: string[]
+          id: string
+          involvement: string
+          name: string
+          suggested_by: string
+          upvotes: number
+          user_vote: number
+          video_url: string
+          vote_ratio: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
