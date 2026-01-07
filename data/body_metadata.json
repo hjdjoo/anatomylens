@@ -4,7 +4,7 @@
   "region": "full_body",
   "export_notes": "V11.0: Left-side + midline only. Bilateral structures mirrored at runtime.",
   "bilateral_count": 537,
-  "midline_count": 72,
+  "midline_count": 77,
   "structures": {
     "anterior_cells_of_ethmoid_bone": {
       "meshId": "anterior_cells_of_ethmoid_bone",
@@ -1025,6 +1025,34 @@
         0.0585
       ]
     },
+    "atlas_c1": {
+      "meshId": "atlas_c1",
+      "originalName": "Atlas (C1)",
+      "baseName": "Atlas (C1)",
+      "type": "bone",
+      "layer": 0,
+      "region": "neck",
+      "bilateral": false,
+      "center": [
+        -0.0,
+        1.5425,
+        -0.0185
+      ]
+    },
+    "axis_c2": {
+      "meshId": "axis_c2",
+      "originalName": "Axis (C2)",
+      "baseName": "Axis (C2)",
+      "type": "bone",
+      "layer": 0,
+      "region": "neck",
+      "bilateral": false,
+      "center": [
+        0.0,
+        1.5255,
+        -0.0198
+      ]
+    },
     "anterior_belly_of_digastric_muscle": {
       "meshId": "anterior_belly_of_digastric_muscle",
       "originalName": "Anterior belly of digastric muscle.l",
@@ -1474,6 +1502,76 @@
         -0.0151,
         1.5475,
         0.016
+      ]
+    },
+    "vertebra_c3": {
+      "meshId": "vertebra_c3",
+      "originalName": "Vertebra C3",
+      "baseName": "Vertebra C3",
+      "type": "bone",
+      "layer": 0,
+      "region": "neck",
+      "bilateral": false,
+      "center": [
+        -0.0,
+        1.5089,
+        -0.0183
+      ]
+    },
+    "vertebra_c4": {
+      "meshId": "vertebra_c4",
+      "originalName": "Vertebra C4",
+      "baseName": "Vertebra C4",
+      "type": "bone",
+      "layer": 0,
+      "region": "neck",
+      "bilateral": false,
+      "center": [
+        0.0,
+        1.4939,
+        -0.019
+      ]
+    },
+    "vertebra_c5": {
+      "meshId": "vertebra_c5",
+      "originalName": "Vertebra C5",
+      "baseName": "Vertebra C5",
+      "type": "bone",
+      "layer": 0,
+      "region": "neck",
+      "bilateral": false,
+      "center": [
+        -0.0,
+        1.479,
+        -0.022
+      ]
+    },
+    "vertebra_c6": {
+      "meshId": "vertebra_c6",
+      "originalName": "Vertebra C6",
+      "baseName": "Vertebra C6",
+      "type": "bone",
+      "layer": 0,
+      "region": "neck",
+      "bilateral": false,
+      "center": [
+        0.0,
+        1.4644,
+        -0.0236
+      ]
+    },
+    "vertebra_c7": {
+      "meshId": "vertebra_c7",
+      "originalName": "Vertebra C7",
+      "baseName": "Vertebra C7",
+      "type": "bone",
+      "layer": 0,
+      "region": "neck",
+      "bilateral": false,
+      "center": [
+        0.0,
+        1.4514,
+        -0.0313
       ]
     },
     "acromial_part_of_deltoid_muscle": {
@@ -6007,34 +6105,6 @@
         -0.0514,
         0.9442,
         -0.0248
-      ]
-    },
-    "atlas_c1": {
-      "meshId": "atlas_c1",
-      "originalName": "Atlas (C1)",
-      "baseName": "Atlas (C1)",
-      "type": "bone",
-      "layer": 0,
-      "region": "pelvis",
-      "bilateral": false,
-      "center": [
-        -0.0,
-        1.5425,
-        -0.0185
-      ]
-    },
-    "axis_c2": {
-      "meshId": "axis_c2",
-      "originalName": "Axis (C2)",
-      "baseName": "Axis (C2)",
-      "type": "bone",
-      "layer": 0,
-      "region": "pelvis",
-      "bilateral": false,
-      "center": [
-        0.0,
-        1.5255,
-        -0.0198
       ]
     },
     "coccygeus_muscle": {

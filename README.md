@@ -1,13 +1,16 @@
-# BodyGuide
+# AnatomyLens
 
 Interactive 3D anatomy visualization for education and fitness.
 
 ## Overview
 
-BodyGuide is a web-based tool that allows users to explore human anatomy through an interactive 3D model. It supports two view modes:
+AnatomyLens is a web-based tool that allows users to explore human anatomy
+through an interactive 3D model. It supports two view modes:
 
-- **Fitness Mode**: Uses common names and practical descriptions targeted at fitness enthusiasts
-- **Clinical Mode**: Uses proper anatomical terminology for medical/educational use
+- **Fitness Mode**: Uses common names and practical descriptions targeted at
+  fitness enthusiasts
+- **Clinical Mode**: Uses proper anatomical terminology for medical/educational
+  use
 
 ## Features
 
@@ -31,7 +34,7 @@ BodyGuide is a web-based tool that allows users to explore human anatomy through
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 
 ### Installation
@@ -39,7 +42,7 @@ BodyGuide is a web-based tool that allows users to explore human anatomy through
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd bodyguide
+cd anatomylens
 
 # Install dependencies
 npm install
@@ -91,6 +94,7 @@ See `src/types/anatomy.ts` for full type definitions.
 ## Development Roadmap
 
 ### Phase 0: Feasibility (Current)
+
 - [x] Project setup with R3F and TypeScript
 - [x] Basic scene with placeholder geometry
 - [x] Hover highlighting and selection
@@ -98,12 +102,14 @@ See `src/types/anatomy.ts` for full type definitions.
 - [ ] Load actual 3D model from Z-Anatomy
 
 ### Phase 1: Torso MVP
+
 - [ ] Export torso structures from Z-Anatomy (Blender)
 - [ ] Implement layer reveal on zoom
 - [ ] Add search functionality
 - [ ] Complete educational content for all torso structures
 
 ### Phase 2: Expansion
+
 - [ ] Additional body regions
 - [ ] User accounts and progress tracking
 - [ ] Quiz/learning mode
@@ -116,7 +122,8 @@ This project uses open-source anatomical data from:
 - **Z-Anatomy** (CC BY-SA 4.0) - 3D models derived from BodyParts3D
 - **Wikipedia** - Anatomical definitions and descriptions
 
-Attribution: "BodyParts3D - The Database Center for Life Science - CC-BY-SA 2.1 Japan"
+Attribution: "BodyParts3D - The Database Center for Life Science - CC-BY-SA 2.1
+Japan"
 
 ## License
 
@@ -124,7 +131,8 @@ Attribution: "BodyParts3D - The Database Center for Life Science - CC-BY-SA 2.1 
 
 ## Contributing
 
-Contributions welcome! Please read the contributing guidelines before submitting PRs.
+Contributions welcome! Please read the contributing guidelines before submitting
+PRs.
 
 ## Acknowledgments
 

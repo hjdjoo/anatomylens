@@ -1,6 +1,7 @@
 # Blender Export Scripts
 
-This directory contains Python scripts for exporting anatomical models from Z-Anatomy into formats suitable for BodyGuide.
+This directory contains Python scripts for exporting anatomical models from
+Z-Anatomy into formats suitable for AnatomyLens.
 
 ## Prerequisites
 
@@ -24,7 +25,9 @@ git clone https://github.com/Z-Anatomy/Models-of-human-anatomy.git
 
 ### Step 2: Open in Blender
 
-1. Follow the instructions at https://github.com/Z-Anatomy/Models-of-human-anatomy.git to install Z-Anatomy Template
+1. Follow the instructions at
+   https://github.com/Z-Anatomy/Models-of-human-anatomy.git to install Z-Anatomy
+   Template
 2. Go to **File > Open**
 3. Navigate to the Z-Anatomy folder and open the `.blend` file
 4. Wait for all assets to load (may take a minute)
@@ -36,7 +39,7 @@ git clone https://github.com/Z-Anatomy/Models-of-human-anatomy.git
 
 ```python
 # Change this line to your actual path:
-OUTPUT_DIR = "/path/to/your/bodyguide/public/models"
+OUTPUT_DIR = "/path/to/your/anatomylens/public/models"
 ```
 
 ### Step 4: Run the Export Script
@@ -64,9 +67,11 @@ After running, you should have two files in your `public/models/` directory:
 ## What the Script Does
 
 1. **Scans** all objects in the Z-Anatomy file
-2. **Filters** to include only torso-related structures (ribs, spine, abdominal muscles, etc.)
+2. **Filters** to include only torso-related structures (ribs, spine, abdominal
+   muscles, etc.)
 3. **Excludes** limbs, head, and neck structures
-4. **Renames** objects to clean mesh IDs (e.g., "Rectus abdominis.L" → "rectus_abdominis")
+4. **Renames** objects to clean mesh IDs (e.g., "Rectus abdominis.L" →
+   "rectus_abdominis")
 5. **Exports** as a single `.glb` file with all structures as named meshes
 6. **Generates** a metadata JSON with structure types, layers, and regions
 
@@ -92,7 +97,8 @@ EXCLUDE_PATTERNS = [
 
 ### Changing Structure Types
 
-The script infers structure type from Z-Anatomy's collection hierarchy. You can customize the mapping:
+The script infers structure type from Z-Anatomy's collection hierarchy. You can
+customize the mapping:
 
 ```python
 COLLECTION_TYPE_MAP = {
@@ -156,19 +162,20 @@ The exported `.glb` file contains:
 }
 ```
 
-## Integrating with BodyGuide
+## Integrating with AnatomyLens
 
 After exporting, you'll need to:
 
 1. **Update `torsoData.ts`** with the actual mesh IDs from your export
-2. **Modify `AnatomyModel.tsx`** to load the glTF instead of placeholder geometry
+2. **Modify `AnatomyModel.tsx`** to load the glTF instead of placeholder
+   geometry
 
 See the main project README for the next steps.
 
 ## Scripts in This Directory
 
-| Script | Purpose |
-|--------|---------|
-| `export_torso.py` | Export torso structures from Z-Anatomy |
-| *(planned)* `export_limbs.py` | Export arm/leg structures |
-| *(planned)* `export_head.py` | Export head/neck structures |
+| Script                        | Purpose                                |
+| ----------------------------- | -------------------------------------- |
+| `export_torso.py`             | Export torso structures from Z-Anatomy |
+| _(planned)_ `export_limbs.py` | Export arm/leg structures              |
+| _(planned)_ `export_head.py`  | Export head/neck structures            |

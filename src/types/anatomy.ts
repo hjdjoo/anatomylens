@@ -1,5 +1,5 @@
 /**
- * Core type definitions for the BodyGuide
+ * Core type definitions for the AnatomyLens
  * 
  * These types define the data model for anatomical structures,
  * supporting both fitness enthusiasts and clinical/educational use.

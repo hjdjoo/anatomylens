@@ -105,7 +105,7 @@ async function getStructureIdMap(): Promise<Map<string, string>> {
 
 async function seedStructureDetails() {
   console.log('='.repeat(60));
-  console.log('BodyGuide Structure Details Seeding');
+  console.log('AnatomyLens Structure Details Seeding');
   console.log('='.repeat(60));
   console.log();
   

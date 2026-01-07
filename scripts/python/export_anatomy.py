@@ -33,14 +33,14 @@ from collections import defaultdict
 # CONFIGURATION
 # ============================================================
 
-OUTPUT_DIR = os.path.expanduser("~/Code/bodyguide/public/models")
-METADATA_OUTPUT_DIR = os.path.expanduser("~/Code/bodyguide/data")
+OUTPUT_DIR = os.path.expanduser("~/Code/anatomylens/public/models")
+METADATA_OUTPUT_DIR = os.path.expanduser("~/Code/anatomylens/data")
 
 GLTF_FILENAME = "body.glb"
 METADATA_FILENAME = "body_metadata.json"
 
 # Path to the curated structure registry
-REGISTRY_PATH = os.path.expanduser("~/Code/bodyguide/data/body_registry.json")
+REGISTRY_PATH = os.path.expanduser("~/Code/anatomylens/data/body_registry.json")
 
 DEBUG_VERBOSE = True
 EXPORT_COLLECTION_NAME = "_EXPORT_TEMP_"

@@ -139,7 +139,7 @@ export function LoginModal() {
           <p className="text-sm text-surface-400 mt-1">
             {mode === 'signin'
               ? 'Sign in to access your account'
-              : 'Get started with BodyGuide'
+              : 'Get started with AnatomyLens'
             }
           </p>
         </div>

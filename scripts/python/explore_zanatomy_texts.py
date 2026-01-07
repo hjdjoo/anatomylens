@@ -23,7 +23,7 @@ from typing import Dict, List, Any, Tuple
 # CONFIGURATION
 # ============================================================
 
-OUTPUT_DIR = os.path.expanduser("~/Code/bodyguide/data")
+OUTPUT_DIR = os.path.expanduser("~/Code/anatomylens/data")
 REPORT_FILENAME = "zanatomy_text_datablocks_report.json"
 
 # ============================================================

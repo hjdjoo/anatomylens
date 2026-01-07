@@ -5,7 +5,7 @@ import os
 
 ALLOW_COLLECTIONS = ['Skeletal system', 'Joints', 'Muscular system']
 
-OUTPUT_DIR = os.path.expanduser("~/Code/bodyguide/data")
+OUTPUT_DIR = os.path.expanduser("~/Code/anatomylens/data")
 FILENAME = 'hierarchies.json'
 
 def blender_test():
