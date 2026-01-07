@@ -88,9 +88,9 @@ class ExportReport:
 # ============================================================
 
 BROKEN_PARENT_CHAIN_PATTERNS = [
-    "inferior pubic ligament",
-    "superior pubic ligament",
-    "interpubic disc",
+    # "inferior pubic ligament",
+    # "superior pubic ligament",
+    # "interpubic disc",
 ]
 
 def needs_location_sum_fix(obj_name: str) -> bool:

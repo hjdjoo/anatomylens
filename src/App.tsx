@@ -1,5 +1,6 @@
 import { AnatomyCanvas } from '@/components/viewer';
-import { InfoPanel, ResponsiveViewControls, ExerciseLibraryModal, LibraryFAB } from '@/components/ui';
+import { InfoPanel, ResponsiveViewControls } from '@/components/ui';
+import { ExerciseLibraryModal, LibraryFAB } from '@/components/features/exerciseLibrary'
 import { Header } from '@/components/layout';
 
 

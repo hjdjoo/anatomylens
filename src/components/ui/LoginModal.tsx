@@ -5,7 +5,7 @@
  */
 
 import { useState, FormEvent } from 'react';
-import { Modal } from './Modal';
+import { Modal } from '../layout/Modal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLoginModal } from '@/store/modalStore';
 

@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Modal } from './Modal';
+import { Modal } from '../layout/Modal';
 import { useSubscriptionModal } from '@/store/modalStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';

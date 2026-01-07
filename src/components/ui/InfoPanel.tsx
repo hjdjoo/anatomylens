@@ -219,7 +219,7 @@ function StructureDetailsSection({ meshId }: { meshId: string }) {
   return (
     <section className="space-y-4">
       {/* FREE TIER: Summary */}
-      {details.summary && (
+      {!hasTier && details.summary && (
         <div className="space-y-2">
           <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
             Summary
@@ -357,18 +357,6 @@ function ExercisesSection({ meshId }: { meshId: string }) {
     return null;
   }
 
-  // Show upsell if user doesn't have tier 1
-  if (!hasTier) {
-    return (
-      <section className="space-y-3">
-        <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
-          Exercises
-        </h3>
-        <Premium />
-      </section>
-    );
-  }
-
   // Loading state
   if (loading) {
     return (
@@ -401,6 +389,20 @@ function ExercisesSection({ meshId }: { meshId: string }) {
       </section>
     );
   }
+
+
+  // Show upsell if user doesn't have tier 1
+  if (!hasTier) {
+    return (
+      <section className="space-y-3">
+        <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
+          Exercises
+        </h3>
+        <Premium />
+      </section>
+    );
+  }
+
 
   // No exercises available
   if (exercises.length === 0) {
@@ -643,7 +645,7 @@ export function InfoPanel() {
           )}
 
           {/* Position (debug info, could be hidden in production) */}
-          <section className="space-y-2 pt-4 border-t border-surface-800">
+          {/* <section className="space-y-2 pt-4 border-t border-surface-800">
             <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wide">
               Center Position
             </h3>
@@ -659,7 +661,7 @@ export function InfoPanel() {
                 z: {structure.mirroredCenter[2].toFixed(3)}
               </p>
             )}
-          </section>
+          </section> */}
         </div>
       </div>
     </div>

@@ -68,6 +68,9 @@ export function AnatomyCanvas() {
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
+        // mouseButtons={{
+        //   LEFT:
+        // }}
         minDistance={0.3}
         maxDistance={5}
         minPolarAngle={Math.PI * 0.1}

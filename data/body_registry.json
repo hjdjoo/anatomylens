@@ -170,6 +170,8 @@
   "neck": {
     "description": "Neck muscles (hyoid, pharynx, prevertebral, scalene)",
     "structures": [
+      "Atlas (C1)",
+      "Axis (C2)",
       "Anterior belly of digastric muscle.l",
       "Anterior belly of digastric muscle.r",
       "Genioglossus muscle.l",
@@ -216,7 +218,12 @@
       "Stylopharyngeus muscle.l",
       "Stylopharyngeus muscle.r",
       "Superior pharyngeal constrictor.l",
-      "Superior pharyngeal constrictor.r"
+      "Superior pharyngeal constrictor.r",
+      "Vertebra C3",
+      "Vertebra C4",
+      "Vertebra C5",
+      "Vertebra C6",
+      "Vertebra C7"
     ],
     "count": 47
   },
@@ -740,8 +747,6 @@
       "Anterior longitudinal ligament",
       "Anterior sacro-iliac ligament.l",
       "Anterior sacro-iliac ligament.r",
-      "Atlas (C1)",
-      "Axis (C2)",
       "Coccygeus muscle.l",
       "Coccygeus muscle.r",
       "Coccyx",
