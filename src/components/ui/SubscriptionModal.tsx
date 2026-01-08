@@ -33,11 +33,11 @@ export function SubscriptionModal() {
         throw new Error("No access token detected")
       }
 
-      const {data: claimsData, error: claimsError} = await supabase.auth.getClaims(jwt);
+      const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(jwt);
 
       if (claimsError || !claimsData) {
         claimsError && console.error(claimsError.message)
-        throw new Error("Couldn't verify JWT")
+        throw new Error("Couldn't verify JWT. Try signing out and signing back in.")
       }
 
       const response = await supabase.functions.invoke('create-checkout-session', {
