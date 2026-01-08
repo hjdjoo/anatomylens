@@ -1,5 +1,8 @@
 /**
  * Authentication Context
+ * 
+ * Single source of truth for user authentication state.
+ * All other hooks should consume user from here instead of calling getUser().
  */
 
 import {
@@ -8,6 +11,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   ReactNode,
 } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
@@ -18,11 +22,18 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 // ============================================================
 
 interface AuthContextValue {
+  /** Current authenticated user (null if not logged in) */
   user: User | null;
+  /** Current session (null if not logged in) */
   session: Session | null;
+  /** True while initial auth state is being determined */
   loading: boolean;
+  /** Most recent auth error */
   error: AuthError | null;
+  /** Whether Supabase is configured */
   isConfigured: boolean;
+  /** User ID shortcut (null if not logged in) */
+  userId: string | null;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUpWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null; needsConfirmation?: boolean }>;
@@ -41,6 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
+  
+  // Prevent duplicate initialization
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -48,58 +62,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    (async ()=>{
-      
-      const {data: {session}, error: sessionError} = await supabase!.auth.getSession();
+    // Prevent double-initialization in StrictMode
+    if (initializedRef.current) return;
+    initializedRef.current = true;
 
-      if (sessionError) {
-        console.error('[Auth] Session error:', sessionError);
-        setError(sessionError);
-      } else {
 
-        const {data: {user}, error: userError} = await supabase
-          .auth
-          .getUser(session?.access_token);
+    // console.log("outside of initalizeAuth(), isMounted: ", isMounted);
+
+    async function initializeAuth() {
+      console.log("Initializing auth...")
+      try {
+        // Get current session
+        console.log("getting session...")
+        const { data: { session: currentSession }, error: sessionError } = await supabase!.auth.getSession();
+
+        if (sessionError) {
+          console.error('[Auth] Session error:', sessionError);
+          if (initializedRef.current) {
+            setError(sessionError);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (!currentSession) {
+          console.log("No session found");
+          // No session = not logged in
+          if (initializedRef.current) {
+            setUser(null);
+            setSession(null);
+            setLoading(false);
+          }
+          return;
+        }
+
+        console.log("verifying user...")
+        // Verify the user with getUser() - this validates the JWT server-side
+        const { data: { user: verifiedUser }, error: userError } = await supabase!.auth.getUser();
 
         if (userError) {
-          console.error(`[Auth] User Error: Could not fetch user`, userError);
-          setError(sessionError);
-          setUser(null);
-          setLoading(false);
-          await supabase.auth.signOut();
-        } else {
+          console.error('[Auth] User verification failed:', userError);
+          // Invalid session - sign out
+          await supabase!.auth.signOut();
+          if (initializedRef.current) {
+            setUser(null);
+            setSession(null);
+            setError(userError);
+            setLoading(false);
+          }
+          return;
+        }
+
+        // Valid session and user
+        // console.log(initializedRef.current);
+        if (initializedRef.current) {
+          setSession(currentSession);
+          setUser(verifiedUser);
           setError(null);
-          setUser(user);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('[Auth] Initialization error:', err);
+        if (initializedRef.current) {
           setLoading(false);
         }
       }
+    }
 
-    })()
+    initializeAuth();
 
-
-    // Get initial session
-    // supabase.auth.getSession().then(({ data: { session }, error }) => {
-    //   if (error) {
-    //     console.error('[Auth] Session error:', error);
-    //     setError(error);
-    //   } else {
-    //     setSession(session);
-    //     setUser(session?.user ?? null);
-    //   }
-    //   setLoading(false);
-    // });
-
-    // Listen for changes
+    // Listen for auth state changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('[Auth]', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setError(null);
+      async (event, newSession) => {
+        console.log('[Auth] State change:', event);
+        
+        if (!initializedRef.current) return;
+
+        if (event === 'SIGNED_OUT' || !newSession) {
+          setSession(null);
+          setUser(null);
+          setError(null);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(newSession);
+          setUser(newSession.user);
+          setError(null);
+        } else if (event === 'USER_UPDATED') {
+          setUser(newSession.user);
+        }
+        
+        // Ensure loading is false after any auth event
+        setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      // console.log("unmounting: isMounted", isMounted)
+      // isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
@@ -176,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         error,
         isConfigured: isSupabaseConfigured,
+        userId: user?.id ?? null,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,

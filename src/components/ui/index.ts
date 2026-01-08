@@ -6,3 +6,5 @@ export * from './UserMenu'
 export * from './Premium';
 export * from './MobileViewControls';
 export * from './ResponsiveViewControls';
+export * from './ErrorBoundary'
+export * from './CanvasErrorBoundary'

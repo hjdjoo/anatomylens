@@ -3,7 +3,7 @@
     "./supabase/functions"
   ],
   "deno.disablePaths": [
-    "./src"
+    "./src/*"
   ],
   "deno.importMap": "./supabase/functions/import_map.json",
   "lint": {

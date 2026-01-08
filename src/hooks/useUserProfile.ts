@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ============================================================
 // USER PROFILE HOOK
@@ -15,59 +16,59 @@ export type UserProfile = {
 }
 
 export function useUserProfile() {
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchProfile = useCallback(async () => {
-    if (!supabase) {
+    if (!supabase || !user) {
+      setProfile(null);
       setLoading(false);
       return;
     }
 
+    setLoading(true);
+    setError(null);
+
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-      if (!user || userError) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
+      const { data, error: profileError } = await supabase
         .from('user_profiles')
         .select('id, display_name, tier, subscription_status, subscription_ends_at, weight_unit')
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+      
       setProfile({
         ...data,
         weight_unit: data.weight_unit || 'lbs', // Default fallback
       });
-      
     } catch (err) {
+      console.error('Error fetching profile:', err);
       setError(err instanceof Error ? err : new Error('Failed to fetch profile'));
+      setProfile(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
+  // Fetch profile when user changes
   useEffect(() => {
-    if (!supabase) {
+    if (authLoading) {
+      // Still determining auth state
+      return;
+    }
+
+    if (!user) {
+      // User is not logged in
+      setProfile(null);
       setLoading(false);
       return;
     }
 
     fetchProfile();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchProfile();
-    });
-
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, [user, authLoading, fetchProfile]);
 
   // Update weight unit preference
   const setWeightUnit = useCallback(async (unit: 'lbs' | 'kg') => {
@@ -90,7 +91,7 @@ export function useUserProfile() {
 
   return { 
     profile, 
-    loading, 
+    loading: loading || authLoading, 
     error, 
     isAuthenticated: !!profile,
     setWeightUnit,

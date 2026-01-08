@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useHasTier, useUserProfile } from './useUserProfile';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ============================================================
 // TYPES
@@ -68,7 +69,8 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
   const [structureId, setStructureId] = useState<string | null>(null);
   
   const { hasTier } = useHasTier(1);
-  const { profile } = useUserProfile();
+  // const { profile } = useUserProfile();
+  const { userId, loading: authLoading } = useAuth();
 
   // Resolve meshId to structureId (UUID)
   useEffect(() => {
@@ -100,7 +102,7 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
 
   // Fetch suggestions for the current structure
   const fetchSuggestions = useCallback(async (reset = false) => {
-    if (!supabase || !structureId || !hasTier) {
+    if (!supabase || !structureId || !hasTier || !userId) {
       setSuggestions([]);
       return;
     }
@@ -110,16 +112,10 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setSuggestions([]);
-        return;
-      }
-
       const { data, error: fetchError } = await supabase
         .rpc('get_structure_suggestions', {
           p_structure_id: structureId,
-          p_user_id: user.id,
+          p_user_id: userId,
           p_limit: pageSize,
           p_offset: currentPage * pageSize,
         });
@@ -142,16 +138,18 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
     } finally {
       setLoading(false);
     }
-  }, [structureId, hasTier, page, pageSize]);
+  }, [structureId, hasTier, userId, page, pageSize]);
 
   // Initial fetch when structure changes
   useEffect(() => {
-    if (structureId) {
+    if (authLoading) return;
+    
+    if (structureId && userId) {
       fetchSuggestions(true);
     } else {
       setSuggestions([]);
     }
-  }, [structureId, hasTier]);
+  }, [structureId, hasTier, userId, authLoading]);
 
   // Load more
   const loadMore = useCallback(() => {
@@ -163,12 +161,9 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
 
   // Vote on a suggestion
   const vote = useCallback(async (suggestionId: string, voteValue: 1 | -1) => {
-    if (!supabase || !profile) return;
+    if (!supabase || !userId) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       // Find current vote state
       const suggestion = suggestions.find(s => s.id === suggestionId);
       const currentVote = suggestion?.user_vote;
@@ -178,7 +173,7 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
         const { error: deleteError } = await supabase
           .from('suggestion_votes')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('suggestion_id', suggestionId);
 
         if (deleteError) throw deleteError;
@@ -204,7 +199,7 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
         const { error: upsertError } = await supabase
           .from('suggestion_votes')
           .upsert({
-            user_id: user.id,
+            user_id: userId,
             suggestion_id: suggestionId,
             vote: voteValue,
             updated_at: new Date().toISOString(),
@@ -245,7 +240,7 @@ export function useExerciseSuggestions(options: UseExerciseSuggestionsOptions) {
       console.error('Error voting:', err);
       // Could show a toast here
     }
-  }, [suggestions, profile]);
+  }, [suggestions, userId]);
 
   return {
     suggestions,

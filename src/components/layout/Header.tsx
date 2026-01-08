@@ -11,7 +11,7 @@ export function Header() {
         {/* Logo / Title */}
         <div className="pointer-events-auto">
           <h1 className="text-xl font-semibold text-surface-100 tracking-tight">
-            Body<span className="text-surface-500">Guide</span>
+            Anatomy<span className="text-surface-500">Lens</span>
           </h1>
           <p className="text-xs text-surface-500 mt-0.5">
             Interactive 3D Anatomy & Fitness Planner

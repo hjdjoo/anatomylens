@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useHasTier, useUserProfile } from './useUserProfile';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { Tables } from 'database.types';
 
@@ -442,10 +443,13 @@ export function useUserExercises() {
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set()); // Track which are saving
   const { hasTier } = useHasTier(1);
   const { profile } = useUserProfile();
+  const { user, userId, loading: authLoading } = useAuth();
 
   // Fetch all saved exercises for the user
   const fetchSavedExercises = useCallback(async () => {
-    if (!supabase || !profile || !hasTier) {
+    if (!supabase || !userId || !hasTier) {
+      setSavedExercises([]);
+      setSavedIds(new Set());
       setLoading(false);
       return;
     }
@@ -454,14 +458,6 @@ export function useUserExercises() {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setSavedExercises([]);
-        setSavedIds(new Set());
-        setLoading(false);
-        return;
-      }
-
       // Fetch user's saved exercises with exercise details
       const { data, error: fetchError } = await supabase
         .from('user_exercises')
@@ -491,7 +487,7 @@ export function useUserExercises() {
             common_mistakes
           )
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('added_at', { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -564,20 +560,21 @@ export function useUserExercises() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId, hasTier]);
 
-  // Initial fetch and auth state listener
+  // Fetch when user or tier changes
   useEffect(() => {
-    if (!supabase) return;
+    if (authLoading) return;
+    
+    if (!user) {
+      setSavedExercises([]);
+      setSavedIds(new Set());
+      setLoading(false);
+      return;
+    }
 
     fetchSavedExercises();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchSavedExercises();
-    });
-
-    return () => subscription.unsubscribe();
-  }, [fetchSavedExercises]);
+  }, [user, authLoading, fetchSavedExercises]);
 
   // Update a user exercise (debounced in component, raw here)
   const updateUserExercise = useCallback(async (
@@ -624,12 +621,9 @@ export function useUserExercises() {
 
   // Toggle save/unsave an exercise
   const toggleSave = useCallback(async (exerciseId: string): Promise<boolean> => {
-    if (!supabase) return false;
+    if (!supabase || !userId) return false;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-
       const isCurrentlySaved = savedIds.has(exerciseId);
 
       if (isCurrentlySaved) {
@@ -637,7 +631,7 @@ export function useUserExercises() {
         const { error: deleteError } = await supabase
           .from('user_exercises')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('exercise_id', exerciseId);
 
         if (deleteError) throw deleteError;
@@ -655,7 +649,7 @@ export function useUserExercises() {
         const { error: insertError } = await supabase
           .from('user_exercises')
           .insert({
-            user_id: user.id,
+            user_id: userId,
             exercise_id: exerciseId,
           });
 
@@ -669,7 +663,7 @@ export function useUserExercises() {
       console.error('Error toggling exercise save:', err);
       throw err;
     }
-  }, [savedIds, fetchSavedExercises]);
+  }, [savedIds, fetchSavedExercises, userId]);
 
   // Check if a specific exercise is saved
   const isSaved = useCallback((exerciseId: string): boolean => {
