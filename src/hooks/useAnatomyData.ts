@@ -36,6 +36,7 @@ export type ExerciseData = {
 export type ExerciseSortMode = 'involvement' | 'difficulty';
 
 // Structure details (from structure_details table)
+
 export type StructureDetails = {
   id: string;
   structure_id: string;
@@ -364,23 +365,52 @@ export function useStructureDetails(meshId: string | null) {
           throw structureError;
         }
 
-        // Fetch details for this structure
-        const { data, error: detailsError } = await supabase
-          .from('structure_details')
-          .select('*')
-          .eq('structure_id', structure.id)
-          .single();
+        if (hasTier) {
+          // Fetch details for this structure
+          const { data, error: detailsError } = await supabase
+            .from('structure_details')
+            .select('*')
+            .eq('structure_id', structure.id)
+            .single();
 
-        if (detailsError) {
-          // No details found is not an error
-          if (detailsError.code === 'PGRST116') {
-            setDetails(null);
-            return;
+          if (detailsError) {
+            // No details found is not an error
+            if (detailsError.code === 'PGRST116') {
+              setDetails(null);
+              return;
+            }
+            throw detailsError;
           }
-          throw detailsError;
-        }
 
-        setDetails(data as StructureDetails);
+          setDetails(data as StructureDetails);
+        } else {
+          const { data, error: detailsError } = await supabase
+            .from('structure_details')
+            .select('id, structure_id, summary, actions, source, created_at, updated_at')
+            .eq('structure_id', structure.id)
+            .single();
+          
+          if (detailsError) {
+            // No details found is not an error
+            if (detailsError.code === 'PGRST116') {
+              setDetails(null);
+              return;
+            }
+            throw detailsError;
+          } 
+
+          const blankData = {
+            description: null,
+            attachments: null,
+            innervation: null,
+            articulations: null
+          }
+
+          const details = Object.assign({}, data, blankData) as StructureDetails;
+
+          setDetails(details);
+        }
+        
       } catch (err) {
         console.error('Error fetching structure details:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch details'));

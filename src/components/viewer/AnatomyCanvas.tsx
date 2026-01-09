@@ -18,7 +18,7 @@ export function AnatomyCanvas() {
     <CanvasErrorBoundary>
       <Canvas
         camera={{
-          position: [0, 0, 1.5],
+          position: [0, 0, 2.5],
           fov: 50,
           near: 0.1,
           far: 100,
