@@ -18,7 +18,7 @@ function AuthCallback() {
   // const [searchParams] = useSearchParams();
 
   const searchParams = Route.useSearch()
-  console.log("auth/callback/searchParams: ", searchParams)
+  // console.log("auth/callback/searchParams: ", searchParams)
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

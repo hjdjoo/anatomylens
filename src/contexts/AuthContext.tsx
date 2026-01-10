@@ -11,7 +11,6 @@ import {
   useEffect,
   useState,
   useCallback,
-  useRef,
   ReactNode,
 } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
@@ -52,9 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
-  
-  // Prevent duplicate initialization
-  const initializedRef = useRef(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -62,23 +58,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Prevent double-initialization in StrictMode
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-
-    // console.log("outside of initalizeAuth(), isMounted: ", isMounted);
+    // Use a local variable scoped to this effect invocation
+    // This correctly handles React 18 StrictMode double-invocation:
+    // - First mount: isMounted = true, subscription created
+    // - Cleanup: isMounted = false, subscription unsubscribed
+    // - Second mount: NEW isMounted = true, NEW subscription created
+    let isMounted = true;
 
     async function initializeAuth() {
-      console.log("Initializing auth...")
+      console.log("[Auth] Initializing auth...");
       try {
         // Get current session
-        console.log("getting session...")
+        console.log("[Auth] Getting session...");
         const { data: { session: currentSession }, error: sessionError } = await supabase!.auth.getSession();
 
         if (sessionError) {
           console.error('[Auth] Session error:', sessionError);
-          if (initializedRef.current) {
+          if (isMounted) {
             setError(sessionError);
             setLoading(false);
           }
@@ -86,9 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (!currentSession) {
-          console.log("No session found");
-          // No session = not logged in
-          if (initializedRef.current) {
+          console.log("[Auth] No session found");
+          if (isMounted) {
             setUser(null);
             setSession(null);
             setLoading(false);
@@ -96,15 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        console.log("verifying user...")
+        console.log("[Auth] Verifying user...");
         // Verify the user with getUser() - this validates the JWT server-side
         const { data: { user: verifiedUser }, error: userError } = await supabase!.auth.getUser();
 
-        if (userError) {
+        if (userError || !verifiedUser) {
           console.error('[Auth] User verification failed:', userError);
           // Invalid session - sign out
           await supabase!.auth.signOut();
-          if (initializedRef.current) {
+          if (isMounted) {
             setUser(null);
             setSession(null);
             setError(userError);
@@ -114,16 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Valid session and user
-        // console.log(initializedRef.current);
-        if (initializedRef.current) {
+        if (isMounted) {
           setSession(currentSession);
           setUser(verifiedUser);
           setError(null);
           setLoading(false);
+          console.log("[Auth] Initialized with user:", verifiedUser.email);
         }
       } catch (err) {
         console.error('[Auth] Initialization error:', err);
-        if (initializedRef.current) {
+        if (isMounted) {
           setLoading(false);
         }
       }
@@ -134,30 +129,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth state changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('[Auth] State change:', event);
-        
-        if (!initializedRef.current) return;
+        console.log('[Auth] State change:', event, newSession?.user?.email ?? 'no session');
 
-        if (event === 'SIGNED_OUT' || !newSession) {
-          setSession(null);
-          setUser(null);
-          setError(null);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setSession(newSession);
-          setUser(newSession.user);
-          setError(null);
-        } else if (event === 'USER_UPDATED') {
-          setUser(newSession.user);
+        if (!isMounted) return;
+
+        switch (event) {
+          case 'INITIAL_SESSION':
+            // This fires immediately on subscription - we already handle this
+            // in initializeAuth(), so we can skip or just ensure state is synced
+            if (newSession) {
+              setSession(newSession);
+              setUser(newSession.user);
+            }
+            // Don't setLoading(false) here - initializeAuth handles it
+            break;
+
+          case 'SIGNED_IN':
+            setSession(newSession);
+            setUser(newSession!.user);
+            setError(null);
+            setLoading(false);
+            break;
+
+          case 'SIGNED_OUT':
+            setSession(null);
+            setUser(null);
+            setError(null);
+            setLoading(false);
+            // No reload needed - React state update will re-render the UI
+            break;
+
+          case 'TOKEN_REFRESHED':
+            if (newSession) {
+              setSession(newSession);
+              setUser(newSession.user);
+            }
+            break;
+
+          case 'USER_UPDATED':
+            if (newSession) {
+              setUser(newSession.user);
+            }
+            break;
+
+          case 'PASSWORD_RECOVERY':
+            // Handle password recovery if needed
+            break;
+
+          default:
+            console.log('[Auth] Unhandled auth event:', event);
         }
-        
-        // Ensure loading is false after any auth event
-        setLoading(false);
       }
     );
 
+    console.log("[Auth] Subscription created");
+
     return () => {
-      // console.log("unmounting: isMounted", isMounted)
-      // isMounted = false;
+      console.log("[Auth] Cleaning up subscription");
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

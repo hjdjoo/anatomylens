@@ -1,18 +1,18 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
-import { AuthProvider } from '@/contexts/AuthContext';
+import { ErrorBoundary } from '@/components/ui';
 import { LoginModal, SubscriptionModal, ToastContainer } from '@/components/ui';
 
 const RootLayout = () => (
   <>
-    <AuthProvider>
+    <ErrorBoundary>
       <Outlet />
-      <TanStackRouterDevtools />
       <LoginModal />
       <SubscriptionModal />
       <ToastContainer />
-    </AuthProvider>
+    </ErrorBoundary>
+    <TanStackRouterDevtools />
   </>
 )
 
