@@ -11,7 +11,7 @@ import { create } from 'zustand';
 // TYPES
 // ============================================================
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'cookie';
 
 export interface Toast {
   id: string;
@@ -24,12 +24,12 @@ export interface Toast {
 
 interface ToastState {
   toasts: Toast[];
-  
+
   // Actions
   addToast: (toast: Omit<Toast, 'id'>) => string;
   removeToast: (id: string) => void;
   clearAll: () => void;
-  
+
   // Convenience methods
   success: (message: string, description?: string) => string;
   error: (message: string, description?: string) => string;
@@ -46,6 +46,7 @@ const DEFAULT_DURATION: Record<ToastType, number> = {
   error: 5000,
   warning: 4000,
   info: 3000,
+  cookie: 1000 * 60 * 60
 };
 
 // ============================================================
@@ -58,7 +59,7 @@ export const useToastStore = create<ToastState>((set, get) => ({
   addToast: (toast) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const duration = toast.duration ?? DEFAULT_DURATION[toast.type];
-    
+
     const newToast: Toast = {
       ...toast,
       id,

@@ -14,7 +14,7 @@ import { useState } from 'react';
 
 const ToastIcon = ({ type }: { type: ToastType }) => {
   const iconProps = { className: 'w-5 h-5', fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' };
-  
+
   switch (type) {
     case 'success':
       return (
@@ -65,6 +65,10 @@ const TYPE_STYLES: Record<ToastType, { container: string; icon: string }> = {
     container: 'bg-blue-900/90 border-blue-700/50',
     icon: 'text-blue-400',
   },
+  cookie: {
+    container: 'bg-blue-900/90 border-blue-700/50',
+    icon: 'text-blue-400',
+  }
 };
 
 // ============================================================

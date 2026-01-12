@@ -25,7 +25,9 @@ if (!rootElement.innerHTML) {
     <StrictMode>
       <ErrorBoundary>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <ErrorBoundary>
+            <RouterProvider router={router} />
+          </ErrorBoundary>
         </AuthProvider>
       </ErrorBoundary>
     </StrictMode >,
