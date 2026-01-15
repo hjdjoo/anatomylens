@@ -9,10 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackSplatRouteImport } from './routes/auth.callback.$'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -32,35 +50,81 @@ const AuthCallbackSplatRoute = AuthCallbackSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account': typeof AccountRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/auth/callback/$': typeof AuthCallbackSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account': typeof AccountRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/auth/callback/$': typeof AuthCallbackSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account': typeof AccountRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/auth/callback/$': typeof AuthCallbackSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/auth/callback/$'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/account'
+    | '/privacy'
+    | '/terms'
+    | '/auth/callback/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/auth/callback/$'
-  id: '__root__' | '/' | '/about' | '/auth/callback/$'
+  to: '/' | '/about' | '/account' | '/privacy' | '/terms' | '/auth/callback/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/account'
+    | '/privacy'
+    | '/terms'
+    | '/auth/callback/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AccountRoute: typeof AccountRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   AuthCallbackSplatRoute: typeof AuthCallbackSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -88,6 +152,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AccountRoute: AccountRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   AuthCallbackSplatRoute: AuthCallbackSplatRoute,
 }
 export const routeTree = rootRouteImport

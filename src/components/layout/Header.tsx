@@ -1,4 +1,5 @@
 import UserMenu from "../ui/UserMenu";
+import HamburgerMenu from "./HamburgerMenu";
 
 /**
  * Application header with branding.
@@ -21,6 +22,7 @@ export function Header() {
         {/* Right side actions could go here */}
         <div className="pointer-events-auto flex items-center gap-2">
           <UserMenu />
+          <HamburgerMenu />
         </div>
       </div>
     </header>

@@ -17,15 +17,6 @@ export type Exercise = Tables<"exercises">
 
 export type StructureExercise = Tables<"structure_exercises">
 
-// export type UserProfile = {
-//   id: string;
-//   display_name: string | null;
-//   tier: number;
-//   subscription_status: string | null;
-//   subscription_ends_at: string | null;
-//   weight_unit: 'lbs' | 'kg' | string;
-// }
-
 export type ExerciseData = {
   exercise: Exercise;
   involvement: StructureExercise["involvement"];
@@ -101,28 +92,28 @@ export function useDebouncedCallback<T extends (...args: any[]) => unknown>(
  */
 export function parseRestTime(input: string): number | null {
   if (!input || input.trim() === '') return null;
-  
+
   const trimmed = input.trim();
-  
+
   // Check for mm:ss format
   if (trimmed.includes(':')) {
     const parts = trimmed.split(':');
     if (parts.length !== 2) return null;
-    
+
     const minutes = parseInt(parts[0], 10);
     const seconds = parseInt(parts[1], 10);
-    
+
     if (isNaN(minutes) || isNaN(seconds)) return null;
     if (seconds < 0 || seconds > 59) return null;
     if (minutes < 0) return null;
-    
+
     return minutes * 60 + seconds;
   }
-  
+
   // Plain seconds
   const seconds = parseInt(trimmed, 10);
   if (isNaN(seconds) || seconds < 0) return null;
-  
+
   return seconds;
 }
 
@@ -132,10 +123,10 @@ export function parseRestTime(input: string): number | null {
  */
 export function formatRestTime(seconds: number | null): string {
   if (seconds === null || seconds === undefined) return '';
-  
+
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  
+
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
@@ -282,10 +273,10 @@ export function useExercises(options: UseExercisesOptions = {}) {
     async function fetchExercises() {
       setLoading(true);
       setError(null);
-       if (!supabase) {
-          setExercises([]);
-          return;
-        }
+      if (!supabase) {
+        setExercises([]);
+        return;
+      }
 
       try {
         let query = supabase
@@ -344,9 +335,9 @@ export function useStructureDetails(meshId: string | null) {
       setLoading(true);
       setError(null);
       if (!supabase || !meshId) {
-          setDetails(null); 
-          return;
-        }
+        setDetails(null);
+        return;
+      }
 
       try {
         // First get the structure ID from mesh_id
@@ -389,7 +380,7 @@ export function useStructureDetails(meshId: string | null) {
             .select('id, structure_id, summary, actions, source, created_at, updated_at')
             .eq('structure_id', structure.id)
             .single();
-          
+
           if (detailsError) {
             // No details found is not an error
             if (detailsError.code === 'PGRST116') {
@@ -397,7 +388,7 @@ export function useStructureDetails(meshId: string | null) {
               return;
             }
             throw detailsError;
-          } 
+          }
 
           const blankData = {
             description: null,
@@ -410,7 +401,7 @@ export function useStructureDetails(meshId: string | null) {
 
           setDetails(details);
         }
-        
+
       } catch (err) {
         console.error('Error fetching structure details:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch details'));
@@ -524,7 +515,7 @@ export function useUserExercises() {
 
       // Get unique exercise IDs to fetch their primary structure regions
       const exerciseIds = (data || []).map(d => d.exercise_id);
-      
+
       // Fetch regions for these exercises (get primary structure for each)
       let regionMap: Record<string, string> = {};
       if (exerciseIds.length > 0) {
@@ -595,7 +586,7 @@ export function useUserExercises() {
   // Fetch when user or tier changes
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!user) {
       setSavedExercises([]);
       setSavedIds(new Set());
@@ -732,7 +723,7 @@ export function generateExerciseCSV(
   weightUnit: 'lbs' | 'kg' | string
 ): string {
   const headers = ['Exercise', 'Region', 'Sets', 'Reps', `Weight (${weightUnit})`, 'Rest', 'Notes'];
-  
+
   const rows = exercises.map(({ exercise, userExercise, region }) => [
     // Escape quotes in exercise name
     `"${exercise.name.replace(/"/g, '""')}"`,
@@ -768,10 +759,10 @@ export function generateExerciseText(
   Object.entries(byRegion).forEach(([region, items]) => {
     lines.push(`## ${region.replace(/_/g, ' ').toUpperCase()}`);
     lines.push('');
-    
+
     items.forEach(({ exercise, userExercise }) => {
       const parts: string[] = [exercise.name];
-      
+
       if (userExercise.sets || userExercise.reps) {
         const setsReps = [
           userExercise.sets ? `${userExercise.sets} sets` : '',
@@ -779,17 +770,17 @@ export function generateExerciseText(
         ].filter(Boolean).join(' x ');
         if (setsReps) parts.push(`- ${setsReps}`);
       }
-      
+
       if (userExercise.weight) {
         parts.push(`@ ${userExercise.weight} ${weightUnit}`);
       }
-      
+
       if (userExercise.rest_seconds) {
         parts.push(`(rest: ${formatRestTime(userExercise.rest_seconds)})`);
       }
-      
+
       lines.push(parts.join(' '));
-      
+
       if (userExercise.notes) {
         lines.push(`   Notes: ${userExercise.notes}`);
       }

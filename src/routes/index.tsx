@@ -1,14 +1,30 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { AnatomyCanvas } from '@/components/viewer';
-import { InfoPanel, ResponsiveViewControls, InstructionsOverlay } from '@/components/ui';
+import { InfoPanel, ResponsiveViewControls, InstructionsOverlay, ToastContainer } from '@/components/ui';
 import { ExerciseLibraryModal, LibraryFAB } from '@/components/features/exerciseLibrary'
 import { Header } from '@/components/layout';
+import { useSubscriptionFeedback } from '@/hooks/useSubscriptionFeedback';
+
+type HomeSearchParams = {
+  subscription?: 'success' | 'canceled';
+  session_id?: string;
+  upgrade?: boolean
+}
 
 export const Route = createFileRoute('/')({
   component: HomePage,
+  validateSearch: (search: Record<string, unknown>): HomeSearchParams => {
+    return {
+      subscription: search.subcription as HomeSearchParams['subscription'],
+      session_id: search.session_id as string
+    }
+  }
 })
 
 function HomePage() {
+
+  useSubscriptionFeedback();
+
   return (
     <div className="w-screen h-screen bg-surface-950 overflow-hidden relative">
       {/* Background gradient */}
@@ -41,6 +57,7 @@ function HomePage() {
 
       {/* Instructions overlay for first-time users */}
       <InstructionsOverlay />
+      <ToastContainer />
     </div>
   )
 }

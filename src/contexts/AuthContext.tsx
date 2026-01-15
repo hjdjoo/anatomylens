@@ -137,10 +137,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           case 'INITIAL_SESSION':
             // This fires immediately on subscription - we already handle this
             // in initializeAuth(), so we can skip or just ensure state is synced
-            if (newSession) {
-              setSession(newSession);
-              setUser(newSession.user);
-            }
+            // if (newSession) {
+            //   setSession(newSession);
+            //   setUser(newSession.user);
+            // }
             // Don't setLoading(false) here - initializeAuth handles it
             break;
 

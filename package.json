@@ -17,7 +17,7 @@
     "supabase:functions-deploy": "supabase functions deploy --no-verify-jwt",
     "supabase:functions-serve": "supabase functions serve --no-verify-jwt  --env-file ./supabase/.env.local",
     "supabase:reset": "supabase db reset && npm run supabase:seed",
-    "supabase:start": "supabase stop && supabase start && npm run supabase:functions-serve",
+    "supabase:start": "supabase stop && sleep 5 && supabase start && npm run supabase:functions-serve",
     "stripe:listen": "stripe listen --forward-to localhost:54321/functions/v1/stripe-webhook",
     "start:functions": "npm run supabase:functions-serve && npm run stripe:listen"
   },
