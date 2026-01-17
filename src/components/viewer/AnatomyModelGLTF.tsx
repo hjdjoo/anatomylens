@@ -290,7 +290,7 @@ function StructureMesh({ structure }: StructureMeshProps) {
   const { geometry, worldMatrix, metadata } = structure;
   const [hovered, setHovered] = useState(false);
   const animatedOpacity = useRef(1);
-  
+
   // Deferred selection pattern refs
   const pendingSelectionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickCount = useRef(0);
@@ -371,8 +371,6 @@ function StructureMesh({ structure }: StructureMeshProps) {
     material.depthWrite = animatedOpacity.current > 0.5;
   });
 
-  // Early return if type not visible
-  if (!isTypeVisible) return null;
 
   const isInteractive = !shouldPeel;
 
@@ -429,18 +427,21 @@ function StructureMesh({ structure }: StructureMeshProps) {
         clearTimeout(pendingSelectionTimer.current);
         pendingSelectionTimer.current = null;
       }
-      
+
       // Execute peel action
       toggleManualPeel(metadata.meshId);
-      
+
       // Clear selection if any (don't open InfoPanel on double-click)
       setSelectedStructure(null);
-      
+
       // Reset click count
       clickCount.current = 0;
     }
   }, [isSelected, metadata.meshId, setSelectedStructure, toggleManualPeel]);
 
+
+  // Early return if type not visible
+  if (!isTypeVisible) return null;
   // Render one or two instances depending on bilateral flag
   return (
     <>

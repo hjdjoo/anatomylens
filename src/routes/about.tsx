@@ -19,13 +19,12 @@ function AboutPage() {
         <div className="space-y-4 text-surface-300">
           <p>
             AnatomyLens is an interactive 3D anatomy visualization tool designed
-            to help fitness enthusiasts, students, and educators explore the human body
-            in unprecedented detail.
+            to help fitness enthusiasts, students, and educators explore the human body in a lightweight, intuitive interface.
           </p>
           <p>
             Whether you're learning which muscles are engaged during specific exercises,
             studying for an anatomy exam, or simply curious about how your body works,
-            AnatomyLens provides an intuitive way to explore over 800 anatomical structures.
+            AnatomyLens provides a simple way to explore over 800 anatomical structures.
           </p>
         </div>
       </section>

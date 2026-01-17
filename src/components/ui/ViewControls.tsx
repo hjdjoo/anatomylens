@@ -39,7 +39,6 @@ export function ViewControls() {
     { key: 'muscles', label: 'Muscles', color: 'bg-anatomy-muscle' },
     { key: 'tendons', label: 'Tendons', color: 'bg-anatomy-tendon' },
     { key: 'ligaments', label: 'Ligaments', color: 'bg-anatomy-ligament' },
-    { key: 'organs', label: 'Organs', color: 'bg-anatomy-organ' },
   ];
 
   return (
