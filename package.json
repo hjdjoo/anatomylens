@@ -1,5 +1,5 @@
 {
-  "name": "anatomy-explorer",
+  "name": "anatomylens",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,18 +7,41 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "supabase:types-remote": "supabase gen types typescript --project-id jbsdhlzwkybwlgzhneqf --schema public > database.types.ts",
+    "supabase:types-local": "supabase gen types typescript --local database.types.ts",
+    "supabase:seed-structures": "npx tsx ./scripts/seed_structures.ts",
+    "supabase:seed-structure-details": "npx tsx ./scripts/seed_structure_details.ts",
+    "supabase:seed-exercises": "npx tsx ./scripts/seed_exercises.ts",
+    "supabase:seed": "npm run supabase:seed-structures && npm run supabase:seed-structure-details && npm run supabase:seed-exercises",
+    "supabase:functions-deploy": "supabase functions deploy --no-verify-jwt",
+    "supabase:functions-serve": "supabase functions serve --no-verify-jwt  --env-file ./supabase/.env.local",
+    "supabase:reset": "supabase db reset && npm run supabase:seed",
+    "supabase:start": "supabase stop && sleep 5 && supabase start && npm run supabase:functions-serve",
+    "stripe:listen": "stripe listen --forward-to localhost:54321/functions/v1/stripe-webhook",
+    "start:functions": "npm run supabase:functions-serve && npm run stripe:listen"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.4",
     "@react-three/drei": "^9.114.0",
     "@react-three/fiber": "^8.17.0",
+    "@supabase/supabase-js": "^2.89.0",
+    "@tanstack/react-router": "^1.146.2",
+    "@tanstack/react-router-devtools": "^1.146.2",
+    "isbot": "^5.1.31",
+    "posthog-js": "^1.316.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "stripe": "^20.1.0",
+    "supabase": "^2.70.5",
     "three": "^0.169.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@tanstack/router-plugin": "^1.146.3",
+    "@types/node": "^24.10.2",
+    "@types/pg": "^8.16.0",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "@types/three": "^0.169.0",
@@ -28,10 +51,12 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.13",
     "globals": "^15.11.0",
+    "pg": "^8.16.3",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.10.0",
-    "vite": "^7.2.7"
+    "vite": "^7.2.7",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }

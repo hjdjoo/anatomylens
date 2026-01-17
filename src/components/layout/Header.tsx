@@ -1,3 +1,6 @@
+import UserMenu from "../ui/UserMenu";
+import HamburgerMenu from "./HamburgerMenu";
+
 /**
  * Application header with branding.
  * Kept minimal to maximize viewport for 3D content.
@@ -9,16 +12,17 @@ export function Header() {
         {/* Logo / Title */}
         <div className="pointer-events-auto">
           <h1 className="text-xl font-semibold text-surface-100 tracking-tight">
-            Anatomy<span className="text-surface-500">Explorer</span>
+            Anatomy<span className="text-surface-500">Lens</span>
           </h1>
           <p className="text-xs text-surface-500 mt-0.5">
-            Interactive 3D Anatomy · Torso
+            Interactive 3D Anatomy & Fitness Planner
           </p>
         </div>
 
         {/* Right side actions could go here */}
         <div className="pointer-events-auto flex items-center gap-2">
-          {/* Placeholder for future features like search, settings, etc. */}
+          <UserMenu />
+          <HamburgerMenu />
         </div>
       </div>
     </header>

@@ -47,3 +47,10 @@ coverage
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Python
+/venv
+/lib
+/include
+.pyvenv.*
+__pycache__/

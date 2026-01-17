@@ -1,0 +1,16 @@
+{
+  "deno.enablePaths": [
+    "./supabase/functions"
+  ],
+  "deno.disablePaths": [
+    "./src/*"
+  ],
+  "deno.importMap": "./supabase/functions/import_map.json",
+  "lint": {
+    "exclude": [
+      "./",
+      "./src/",
+      "./scripts/"
+    ]
+  }
+}

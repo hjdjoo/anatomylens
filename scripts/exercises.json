@@ -1,0 +1,1943 @@
+{
+  "_metadata": {
+    "version": "1.0",
+    "description": "Exercise seed data for anatomy explorer database",
+    "total_exercises": 94,
+    "notes": [
+      "mesh_ids reference structures from body_registry.json",
+      "Import script should resolve mesh_id to structure_id",
+      "Bilateral structures use base name without .l/.r suffix",
+      "Involvement: primary (main mover), secondary (assist), stabilizer, stretched"
+    ]
+  },
+  "exercises": [
+    {
+      "name": "Barbell Bench Press",
+      "slug": "barbell-bench-press",
+      "difficulty": 3,
+      "equipment": [
+        "barbell",
+        "bench"
+      ],
+      "category": "chest",
+      "movement_pattern": "horizontal_push",
+      "primary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "clavicular_head_of_pectoralis_major_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_triceps_brachii",
+        "lateral_head_of_triceps_brachii",
+        "medial_head_of_triceps_brachii",
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "serratus_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Incline Dumbbell Press",
+      "slug": "incline-dumbbell-press",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells",
+        "incline_bench"
+      ],
+      "category": "chest",
+      "movement_pattern": "horizontal_push",
+      "primary_structures": [
+        "clavicular_head_of_pectoralis_major_muscle"
+      ],
+      "secondary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "acromial_part_of_deltoid_muscle",
+        "long_head_of_triceps_brachii"
+      ],
+      "stabilizer_structures": [
+        "serratus_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Dumbbell Fly",
+      "slug": "dumbbell-fly",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "category": "chest",
+      "movement_pattern": "horizontal_adduction",
+      "primary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "clavicular_head_of_pectoralis_major_muscle"
+      ],
+      "secondary_structures": [
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "short_head_of_biceps_brachii"
+      ]
+    },
+    {
+      "name": "Push-Up",
+      "slug": "push-up",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "chest",
+      "movement_pattern": "horizontal_push",
+      "primary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "clavicular_head_of_pectoralis_major_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_triceps_brachii",
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle",
+        "serratus_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Cable Crossover",
+      "slug": "cable-crossover",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "chest",
+      "movement_pattern": "horizontal_adduction",
+      "primary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle"
+      ],
+      "secondary_structures": [
+        "clavicular_head_of_pectoralis_major_muscle",
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Dip",
+      "slug": "dip",
+      "difficulty": 3,
+      "equipment": [
+        "dip_bars"
+      ],
+      "category": "chest",
+      "movement_pattern": "vertical_push",
+      "primary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "long_head_of_triceps_brachii"
+      ],
+      "secondary_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "lateral_head_of_triceps_brachii"
+      ],
+      "stabilizer_structures": [
+        "rhomboid_major_muscle",
+        "levator_scapulae"
+      ]
+    },
+    {
+      "name": "Pull-Up",
+      "slug": "pull-up",
+      "difficulty": 4,
+      "equipment": [
+        "pull_up_bar"
+      ],
+      "category": "back",
+      "movement_pattern": "vertical_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii",
+        "teres_major_muscle",
+        "rhomboid_major_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Lat Pulldown",
+      "slug": "lat-pulldown",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "back",
+      "movement_pattern": "vertical_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii",
+        "teres_major_muscle"
+      ],
+      "stabilizer_structures": [
+        "rhomboid_major_muscle"
+      ]
+    },
+    {
+      "name": "Barbell Row",
+      "slug": "barbell-row",
+      "difficulty": 3,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "long_head_of_biceps_brachii",
+        "descending_part_of_trapezius_muscle",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "longissimus_thoracis_muscle",
+        "iliocostalis_lumborum_muscle"
+      ]
+    },
+    {
+      "name": "Dumbbell Row",
+      "slug": "dumbbell-row",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbell",
+        "bench"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "rhomboid_major_muscle"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "long_head_of_biceps_brachii",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Seated Cable Row",
+      "slug": "seated-cable-row",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "long_head_of_biceps_brachii",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "longissimus_thoracis_muscle"
+      ]
+    },
+    {
+      "name": "Face Pull",
+      "slug": "face-pull",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine",
+        "rope_attachment"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "transverse_part_of_trapezius_muscle",
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle"
+      ],
+      "secondary_structures": [
+        "infraspinatus_muscle",
+        "teres_minor_muscle",
+        "scapular_spinal_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Deadlift",
+      "slug": "deadlift",
+      "difficulty": 4,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "back",
+      "movement_pattern": "hip_hinge",
+      "primary_structures": [
+        "gluteus_maximus_muscle",
+        "longissimus_thoracis_muscle",
+        "iliocostalis_lumborum_muscle"
+      ],
+      "secondary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris",
+        "latissimus_dorsi_muscle",
+        "descending_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle",
+        "quadratus_lumborum_muscle"
+      ]
+    },
+    {
+      "name": "Romanian Deadlift",
+      "slug": "romanian-deadlift",
+      "difficulty": 3,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "back",
+      "movement_pattern": "hip_hinge",
+      "primary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "longissimus_thoracis_muscle",
+        "iliocostalis_lumborum_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Back Extension",
+      "slug": "back-extension",
+      "difficulty": 2,
+      "equipment": [
+        "back_extension_bench"
+      ],
+      "category": "back",
+      "movement_pattern": "spinal_extension",
+      "primary_structures": [
+        "longissimus_thoracis_muscle",
+        "iliocostalis_lumborum_muscle",
+        "iliocostalis_thoracis_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_maximus_muscle",
+        "semimembranosus_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Shrug",
+      "slug": "shrug",
+      "difficulty": 1,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "back",
+      "movement_pattern": "scapular_elevation",
+      "primary_structures": [
+        "descending_part_of_trapezius_muscle"
+      ],
+      "secondary_structures": [
+        "levator_scapulae"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Overhead Press",
+      "slug": "overhead-press",
+      "difficulty": 3,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "vertical_push",
+      "primary_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "clavicular_part_of_deltoid_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_triceps_brachii",
+        "descending_part_of_trapezius_muscle",
+        "serratus_anterior_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Dumbbell Shoulder Press",
+      "slug": "dumbbell-shoulder-press",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "vertical_push",
+      "primary_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "clavicular_part_of_deltoid_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_triceps_brachii",
+        "descending_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Lateral Raise",
+      "slug": "lateral-raise",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "shoulder_abduction",
+      "primary_structures": [
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "secondary_structures": [
+        "supraspinatus_muscle",
+        "descending_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Front Raise",
+      "slug": "front-raise",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "shoulder_flexion",
+      "primary_structures": [
+        "clavicular_part_of_deltoid_muscle"
+      ],
+      "secondary_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "clavicular_head_of_pectoralis_major_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Rear Delt Fly",
+      "slug": "rear-delt-fly",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "shoulder_horizontal_abduction",
+      "primary_structures": [
+        "scapular_spinal_part_of_deltoid_muscle"
+      ],
+      "secondary_structures": [
+        "infraspinatus_muscle",
+        "teres_minor_muscle",
+        "rhomboid_major_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Upright Row",
+      "slug": "upright-row",
+      "difficulty": 2,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "shoulder_abduction",
+      "primary_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "descending_part_of_trapezius_muscle"
+      ],
+      "secondary_structures": [
+        "supraspinatus_muscle",
+        "long_head_of_biceps_brachii"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Arnold Press",
+      "slug": "arnold-press",
+      "difficulty": 3,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "vertical_push",
+      "primary_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "clavicular_part_of_deltoid_muscle"
+      ],
+      "secondary_structures": [
+        "scapular_spinal_part_of_deltoid_muscle",
+        "long_head_of_triceps_brachii"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "External Rotation",
+      "slug": "external-rotation",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "shoulder_rotation",
+      "primary_structures": [
+        "infraspinatus_muscle",
+        "teres_minor_muscle"
+      ],
+      "secondary_structures": [
+        "scapular_spinal_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Internal Rotation",
+      "slug": "internal-rotation",
+      "difficulty": 1,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "shoulder_rotation",
+      "primary_structures": [
+        "subscapularis_muscle"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "latissimus_dorsi_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Barbell Curl",
+      "slug": "barbell-curl",
+      "difficulty": 2,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_flexion",
+      "primary_structures": [
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii"
+      ],
+      "secondary_structures": [
+        "brachialis_muscle",
+        "brachioradialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Dumbbell Curl",
+      "slug": "dumbbell-curl",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_flexion",
+      "primary_structures": [
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii"
+      ],
+      "secondary_structures": [
+        "brachialis_muscle",
+        "brachioradialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Hammer Curl",
+      "slug": "hammer-curl",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_flexion",
+      "primary_structures": [
+        "brachioradialis_muscle",
+        "brachialis_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Concentration Curl",
+      "slug": "concentration-curl",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_flexion",
+      "primary_structures": [
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii"
+      ],
+      "secondary_structures": [
+        "brachialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Preacher Curl",
+      "slug": "preacher-curl",
+      "difficulty": 2,
+      "equipment": [
+        "ez_bar",
+        "preacher_bench"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_flexion",
+      "primary_structures": [
+        "short_head_of_biceps_brachii"
+      ],
+      "secondary_structures": [
+        "long_head_of_biceps_brachii",
+        "brachialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Cable Curl",
+      "slug": "cable-curl",
+      "difficulty": 1,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_flexion",
+      "primary_structures": [
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii"
+      ],
+      "secondary_structures": [
+        "brachialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Tricep Pushdown",
+      "slug": "tricep-pushdown",
+      "difficulty": 1,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_extension",
+      "primary_structures": [
+        "lateral_head_of_triceps_brachii",
+        "medial_head_of_triceps_brachii"
+      ],
+      "secondary_structures": [
+        "long_head_of_triceps_brachii"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Overhead Tricep Extension",
+      "slug": "overhead-tricep-extension",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_extension",
+      "primary_structures": [
+        "long_head_of_triceps_brachii"
+      ],
+      "secondary_structures": [
+        "lateral_head_of_triceps_brachii",
+        "medial_head_of_triceps_brachii"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Skull Crusher",
+      "slug": "skull-crusher",
+      "difficulty": 2,
+      "equipment": [
+        "ez_bar",
+        "bench"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_extension",
+      "primary_structures": [
+        "long_head_of_triceps_brachii",
+        "lateral_head_of_triceps_brachii",
+        "medial_head_of_triceps_brachii"
+      ],
+      "secondary_structures": [],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Close-Grip Bench Press",
+      "slug": "close-grip-bench-press",
+      "difficulty": 3,
+      "equipment": [
+        "barbell",
+        "bench"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_extension",
+      "primary_structures": [
+        "long_head_of_triceps_brachii",
+        "lateral_head_of_triceps_brachii",
+        "medial_head_of_triceps_brachii"
+      ],
+      "secondary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Tricep Kickback",
+      "slug": "tricep-kickback",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_extension",
+      "primary_structures": [
+        "lateral_head_of_triceps_brachii",
+        "medial_head_of_triceps_brachii"
+      ],
+      "secondary_structures": [
+        "long_head_of_triceps_brachii"
+      ],
+      "stabilizer_structures": [
+        "scapular_spinal_part_of_deltoid_muscle"
+      ]
+    },
+    {
+      "name": "Diamond Push-Up",
+      "slug": "diamond-push-up",
+      "difficulty": 3,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_extension",
+      "primary_structures": [
+        "long_head_of_triceps_brachii",
+        "lateral_head_of_triceps_brachii",
+        "medial_head_of_triceps_brachii"
+      ],
+      "secondary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Wrist Curl",
+      "slug": "wrist-curl",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "arms",
+      "movement_pattern": "wrist_flexion",
+      "primary_structures": [
+        "flexor_carpi_radialis",
+        "humeral_head_of_flexor_carpi_ulnaris"
+      ],
+      "secondary_structures": [
+        "palmaris_longus_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Reverse Wrist Curl",
+      "slug": "reverse-wrist-curl",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "arms",
+      "movement_pattern": "wrist_extension",
+      "primary_structures": [
+        "extensor_carpi_radialis_longus",
+        "extensor_carpi_radialis_brevis",
+        "humeral_head_of_extensor_carpi_ulnaris"
+      ],
+      "secondary_structures": [
+        "extensor_digitorum"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Barbell Squat",
+      "slug": "barbell-squat",
+      "difficulty": 4,
+      "equipment": [
+        "barbell",
+        "squat_rack"
+      ],
+      "category": "legs",
+      "movement_pattern": "squat",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "vastus_intermedius_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "adductor_magnus",
+        "semimembranosus_muscle",
+        "semitendinosus_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle",
+        "longissimus_thoracis_muscle"
+      ]
+    },
+    {
+      "name": "Front Squat",
+      "slug": "front-squat",
+      "difficulty": 4,
+      "equipment": [
+        "barbell",
+        "squat_rack"
+      ],
+      "category": "legs",
+      "movement_pattern": "squat",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "vastus_intermedius_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_maximus_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle",
+        "longissimus_thoracis_muscle"
+      ]
+    },
+    {
+      "name": "Goblet Squat",
+      "slug": "goblet-squat",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "legs",
+      "movement_pattern": "squat",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "vastus_intermedius_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "adductor_magnus"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Leg Press",
+      "slug": "leg-press",
+      "difficulty": 2,
+      "equipment": [
+        "leg_press_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "squat",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "vastus_intermedius_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "adductor_magnus",
+        "semimembranosus_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Hack Squat",
+      "slug": "hack-squat",
+      "difficulty": 2,
+      "equipment": [
+        "hack_squat_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "squat",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "vastus_intermedius_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_maximus_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Bulgarian Split Squat",
+      "slug": "bulgarian-split-squat",
+      "difficulty": 3,
+      "equipment": [
+        "dumbbells",
+        "bench"
+      ],
+      "category": "legs",
+      "movement_pattern": "lunge",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_medius_muscle",
+        "adductor_magnus"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Walking Lunge",
+      "slug": "walking-lunge",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "legs",
+      "movement_pattern": "lunge",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_medius_muscle",
+        "semimembranosus_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Reverse Lunge",
+      "slug": "reverse-lunge",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "legs",
+      "movement_pattern": "lunge",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_medius_muscle",
+        "vastus_medialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Step-Up",
+      "slug": "step-up",
+      "difficulty": 2,
+      "equipment": [
+        "box",
+        "dumbbells"
+      ],
+      "category": "legs",
+      "movement_pattern": "lunge",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_medius_muscle",
+        "vastus_medialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Leg Extension",
+      "slug": "leg-extension",
+      "difficulty": 1,
+      "equipment": [
+        "leg_extension_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "knee_extension",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "vastus_intermedius_muscle"
+      ],
+      "secondary_structures": [],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Leg Curl",
+      "slug": "leg-curl",
+      "difficulty": 1,
+      "equipment": [
+        "leg_curl_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "knee_flexion",
+      "primary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris",
+        "short_head_of_biceps_femoris"
+      ],
+      "secondary_structures": [
+        "gracilis_muscle",
+        "sartorius_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Nordic Hamstring Curl",
+      "slug": "nordic-hamstring-curl",
+      "difficulty": 5,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "legs",
+      "movement_pattern": "knee_flexion",
+      "primary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris",
+        "short_head_of_biceps_femoris"
+      ],
+      "secondary_structures": [],
+      "stabilizer_structures": [
+        "gluteus_maximus_muscle"
+      ]
+    },
+    {
+      "name": "Good Morning",
+      "slug": "good-morning",
+      "difficulty": 3,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_hinge",
+      "primary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "longissimus_thoracis_muscle",
+        "iliocostalis_lumborum_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Hip Thrust",
+      "slug": "hip-thrust",
+      "difficulty": 2,
+      "equipment": [
+        "barbell",
+        "bench"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_extension",
+      "primary_structures": [
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Glute Bridge",
+      "slug": "glute-bridge",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_extension",
+      "primary_structures": [
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Cable Pull-Through",
+      "slug": "cable-pull-through",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_hinge",
+      "primary_structures": [
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Hip Abduction Machine",
+      "slug": "hip-abduction-machine",
+      "difficulty": 1,
+      "equipment": [
+        "hip_abduction_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_abduction",
+      "primary_structures": [
+        "gluteus_medius_muscle",
+        "gluteus_minimus_muscle"
+      ],
+      "secondary_structures": [
+        "tensor_fasciae_latae"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Side-Lying Hip Abduction",
+      "slug": "side-lying-hip-abduction",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_abduction",
+      "primary_structures": [
+        "gluteus_medius_muscle",
+        "gluteus_minimus_muscle"
+      ],
+      "secondary_structures": [
+        "tensor_fasciae_latae"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Clamshell",
+      "slug": "clamshell",
+      "difficulty": 1,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_external_rotation",
+      "primary_structures": [
+        "gluteus_medius_muscle",
+        "gluteus_minimus_muscle"
+      ],
+      "secondary_structures": [
+        "piriformis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Hip Adduction Machine",
+      "slug": "hip-adduction-machine",
+      "difficulty": 1,
+      "equipment": [
+        "hip_adduction_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_adduction",
+      "primary_structures": [
+        "adductor_longus",
+        "adductor_brevis",
+        "adductor_magnus"
+      ],
+      "secondary_structures": [
+        "gracilis_muscle",
+        "pectineus_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Copenhagen Plank",
+      "slug": "copenhagen-plank",
+      "difficulty": 4,
+      "equipment": [
+        "bench"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_adduction",
+      "primary_structures": [
+        "adductor_longus",
+        "adductor_brevis",
+        "adductor_magnus"
+      ],
+      "secondary_structures": [
+        "gracilis_muscle"
+      ],
+      "stabilizer_structures": [
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle"
+      ]
+    },
+    {
+      "name": "Calf Raise",
+      "slug": "calf-raise",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "legs",
+      "movement_pattern": "ankle_plantar_flexion",
+      "primary_structures": [
+        "lateral_head_of_gastrocnemius",
+        "medial_head_of_gastrocnemius",
+        "soleus_muscle"
+      ],
+      "secondary_structures": [],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Seated Calf Raise",
+      "slug": "seated-calf-raise",
+      "difficulty": 1,
+      "equipment": [
+        "seated_calf_raise_machine"
+      ],
+      "category": "legs",
+      "movement_pattern": "ankle_plantar_flexion",
+      "primary_structures": [
+        "soleus_muscle"
+      ],
+      "secondary_structures": [
+        "lateral_head_of_gastrocnemius",
+        "medial_head_of_gastrocnemius"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Tibialis Raise",
+      "slug": "tibialis-raise",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "legs",
+      "movement_pattern": "ankle_dorsiflexion",
+      "primary_structures": [
+        "tibialis_anterior_muscle"
+      ],
+      "secondary_structures": [
+        "extensor_digitorum_longus",
+        "extensor_hallucis_longus"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Crunch",
+      "slug": "crunch",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "spinal_flexion",
+      "primary_structures": [
+        "rectus_abdominis_muscle"
+      ],
+      "secondary_structures": [
+        "external_abdominal_oblique_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Sit-Up",
+      "slug": "sit-up",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "spinal_flexion",
+      "primary_structures": [
+        "rectus_abdominis_muscle"
+      ],
+      "secondary_structures": [
+        "external_abdominal_oblique_muscle",
+        "psoas_major"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Leg Raise",
+      "slug": "leg-raise",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "hip_flexion",
+      "primary_structures": [
+        "rectus_abdominis_muscle",
+        "psoas_major",
+        "iliacus_muscle"
+      ],
+      "secondary_structures": [
+        "rectus_femoris_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Hanging Leg Raise",
+      "slug": "hanging-leg-raise",
+      "difficulty": 4,
+      "equipment": [
+        "pull_up_bar"
+      ],
+      "category": "core",
+      "movement_pattern": "hip_flexion",
+      "primary_structures": [
+        "rectus_abdominis_muscle",
+        "psoas_major",
+        "iliacus_muscle"
+      ],
+      "secondary_structures": [
+        "rectus_femoris_muscle",
+        "external_abdominal_oblique_muscle"
+      ],
+      "stabilizer_structures": [
+        "latissimus_dorsi_muscle"
+      ]
+    },
+    {
+      "name": "Plank",
+      "slug": "plank",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "anti_extension",
+      "primary_structures": [
+        "rectus_abdominis_muscle",
+        "transversus_abdominis_muscle"
+      ],
+      "secondary_structures": [
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle"
+      ],
+      "stabilizer_structures": [
+        "gluteus_maximus_muscle",
+        "rectus_femoris_muscle"
+      ]
+    },
+    {
+      "name": "Side Plank",
+      "slug": "side-plank",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "anti_lateral_flexion",
+      "primary_structures": [
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle",
+        "quadratus_lumborum_muscle"
+      ],
+      "secondary_structures": [
+        "rectus_abdominis_muscle",
+        "gluteus_medius_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Russian Twist",
+      "slug": "russian-twist",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "spinal_rotation",
+      "primary_structures": [
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle"
+      ],
+      "secondary_structures": [
+        "rectus_abdominis_muscle"
+      ],
+      "stabilizer_structures": [
+        "psoas_major"
+      ]
+    },
+    {
+      "name": "Bicycle Crunch",
+      "slug": "bicycle-crunch",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "spinal_rotation",
+      "primary_structures": [
+        "rectus_abdominis_muscle",
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle"
+      ],
+      "secondary_structures": [
+        "psoas_major",
+        "iliacus_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Dead Bug",
+      "slug": "dead-bug",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "anti_extension",
+      "primary_structures": [
+        "rectus_abdominis_muscle",
+        "transversus_abdominis_muscle"
+      ],
+      "secondary_structures": [
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Bird Dog",
+      "slug": "bird-dog",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "anti_rotation",
+      "primary_structures": [
+        "longissimus_thoracis_muscle",
+        "multifidus_lumborum_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_maximus_muscle",
+        "rectus_abdominis_muscle"
+      ],
+      "stabilizer_structures": [
+        "transversus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Ab Rollout",
+      "slug": "ab-rollout",
+      "difficulty": 4,
+      "equipment": [
+        "ab_wheel"
+      ],
+      "category": "core",
+      "movement_pattern": "anti_extension",
+      "primary_structures": [
+        "rectus_abdominis_muscle"
+      ],
+      "secondary_structures": [
+        "external_abdominal_oblique_muscle",
+        "latissimus_dorsi_muscle"
+      ],
+      "stabilizer_structures": [
+        "transversus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Pallof Press",
+      "slug": "pallof-press",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "core",
+      "movement_pattern": "anti_rotation",
+      "primary_structures": [
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle",
+        "transversus_abdominis_muscle"
+      ],
+      "secondary_structures": [
+        "rectus_abdominis_muscle"
+      ],
+      "stabilizer_structures": [
+        "gluteus_medius_muscle"
+      ]
+    },
+    {
+      "name": "Cable Woodchop",
+      "slug": "cable-woodchop",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "core",
+      "movement_pattern": "spinal_rotation",
+      "primary_structures": [
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle"
+      ],
+      "secondary_structures": [
+        "rectus_abdominis_muscle",
+        "serratus_anterior_muscle"
+      ],
+      "stabilizer_structures": [
+        "gluteus_medius_muscle"
+      ]
+    },
+    {
+      "name": "Mountain Climber",
+      "slug": "mountain-climber",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "core",
+      "movement_pattern": "hip_flexion",
+      "primary_structures": [
+        "rectus_abdominis_muscle",
+        "psoas_major",
+        "iliacus_muscle"
+      ],
+      "secondary_structures": [
+        "external_abdominal_oblique_muscle",
+        "rectus_femoris_muscle"
+      ],
+      "stabilizer_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "sternocostal_head_of_pectoralis_major_muscle"
+      ]
+    },
+    {
+      "name": "Farmer's Walk",
+      "slug": "farmers-walk",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "core",
+      "movement_pattern": "loaded_carry",
+      "primary_structures": [
+        "descending_part_of_trapezius_muscle",
+        "transversus_abdominis_muscle"
+      ],
+      "secondary_structures": [
+        "external_abdominal_oblique_muscle",
+        "quadratus_lumborum_muscle",
+        "gluteus_medius_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Suitcase Carry",
+      "slug": "suitcase-carry",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "core",
+      "movement_pattern": "loaded_carry",
+      "primary_structures": [
+        "quadratus_lumborum_muscle",
+        "external_abdominal_oblique_muscle",
+        "internal_abdominal_oblique_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_medius_muscle",
+        "descending_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Chin-Up",
+      "slug": "chin-up",
+      "difficulty": 3,
+      "equipment": [
+        "pull_up_bar"
+      ],
+      "category": "back",
+      "movement_pattern": "vertical_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "long_head_of_biceps_brachii",
+        "short_head_of_biceps_brachii"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "brachialis_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Inverted Row",
+      "slug": "inverted-row",
+      "difficulty": 2,
+      "equipment": [
+        "barbell",
+        "squat_rack"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_biceps_brachii",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Straight Arm Pulldown",
+      "slug": "straight-arm-pulldown",
+      "difficulty": 2,
+      "equipment": [
+        "cable_machine"
+      ],
+      "category": "back",
+      "movement_pattern": "shoulder_extension",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "teres_major_muscle"
+      ],
+      "secondary_structures": [
+        "long_head_of_triceps_brachii",
+        "scapular_spinal_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Sumo Deadlift",
+      "slug": "sumo-deadlift",
+      "difficulty": 4,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_hinge",
+      "primary_structures": [
+        "gluteus_maximus_muscle",
+        "adductor_magnus",
+        "adductor_longus"
+      ],
+      "secondary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "longissimus_thoracis_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle",
+        "latissimus_dorsi_muscle"
+      ]
+    },
+    {
+      "name": "Stiff-Leg Deadlift",
+      "slug": "stiff-leg-deadlift",
+      "difficulty": 3,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "legs",
+      "movement_pattern": "hip_hinge",
+      "primary_structures": [
+        "semimembranosus_muscle",
+        "semitendinosus_muscle",
+        "long_head_of_biceps_femoris"
+      ],
+      "secondary_structures": [
+        "gluteus_maximus_muscle",
+        "longissimus_thoracis_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Decline Bench Press",
+      "slug": "decline-bench-press",
+      "difficulty": 3,
+      "equipment": [
+        "barbell",
+        "decline_bench"
+      ],
+      "category": "chest",
+      "movement_pattern": "horizontal_push",
+      "primary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle"
+      ],
+      "secondary_structures": [
+        "clavicular_head_of_pectoralis_major_muscle",
+        "long_head_of_triceps_brachii",
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "serratus_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Incline Dumbbell Fly",
+      "slug": "incline-dumbbell-fly",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells",
+        "incline_bench"
+      ],
+      "category": "chest",
+      "movement_pattern": "horizontal_adduction",
+      "primary_structures": [
+        "clavicular_head_of_pectoralis_major_muscle"
+      ],
+      "secondary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle",
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "T-Bar Row",
+      "slug": "t-bar-row",
+      "difficulty": 3,
+      "equipment": [
+        "t_bar",
+        "barbell"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "rhomboid_major_muscle"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "long_head_of_biceps_brachii",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "longissimus_thoracis_muscle"
+      ]
+    },
+    {
+      "name": "Pendlay Row",
+      "slug": "pendlay-row",
+      "difficulty": 4,
+      "equipment": [
+        "barbell"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle",
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "long_head_of_biceps_brachii"
+      ],
+      "stabilizer_structures": [
+        "longissimus_thoracis_muscle",
+        "iliocostalis_lumborum_muscle"
+      ]
+    },
+    {
+      "name": "Single Arm Dumbbell Row",
+      "slug": "single-arm-dumbbell-row",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbell",
+        "bench"
+      ],
+      "category": "back",
+      "movement_pattern": "horizontal_pull",
+      "primary_structures": [
+        "latissimus_dorsi_muscle"
+      ],
+      "secondary_structures": [
+        "rhomboid_major_muscle",
+        "teres_major_muscle",
+        "long_head_of_biceps_brachii"
+      ],
+      "stabilizer_structures": [
+        "external_abdominal_oblique_muscle"
+      ]
+    },
+    {
+      "name": "Reverse Fly Machine",
+      "slug": "reverse-fly-machine",
+      "difficulty": 1,
+      "equipment": [
+        "reverse_fly_machine"
+      ],
+      "category": "shoulders",
+      "movement_pattern": "shoulder_horizontal_abduction",
+      "primary_structures": [
+        "scapular_spinal_part_of_deltoid_muscle"
+      ],
+      "secondary_structures": [
+        "infraspinatus_muscle",
+        "teres_minor_muscle",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Dumbbell Shrug",
+      "slug": "dumbbell-shrug",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbells"
+      ],
+      "category": "back",
+      "movement_pattern": "scapular_elevation",
+      "primary_structures": [
+        "descending_part_of_trapezius_muscle"
+      ],
+      "secondary_structures": [
+        "levator_scapulae"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Incline Curl",
+      "slug": "incline-curl",
+      "difficulty": 2,
+      "equipment": [
+        "dumbbells",
+        "incline_bench"
+      ],
+      "category": "arms",
+      "movement_pattern": "elbow_flexion",
+      "primary_structures": [
+        "long_head_of_biceps_brachii"
+      ],
+      "secondary_structures": [
+        "short_head_of_biceps_brachii",
+        "brachialis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Sissy Squat",
+      "slug": "sissy-squat",
+      "difficulty": 4,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "legs",
+      "movement_pattern": "knee_extension",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "vastus_intermedius_muscle"
+      ],
+      "secondary_structures": [],
+      "stabilizer_structures": [
+        "tibialis_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Pistol Squat",
+      "slug": "pistol-squat",
+      "difficulty": 5,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "legs",
+      "movement_pattern": "squat",
+      "primary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle",
+        "vastus_medialis_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_medius_muscle",
+        "adductor_magnus"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle",
+        "psoas_major"
+      ]
+    }
+  ]
+}

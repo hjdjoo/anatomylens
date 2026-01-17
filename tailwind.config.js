@@ -14,6 +14,7 @@ export default {
           tendon: '#D4A574',
           ligament: '#8B7355',
           cartilage: '#A8D5BA',
+          fascia: '#D4A5A5',
           organ: '#8B4557',
         },
         // UI colors - dark theme for medical visualization
