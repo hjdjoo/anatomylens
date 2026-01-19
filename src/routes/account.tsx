@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscriptionStatus, useManageSubscription } from '@/components/ui/SubscriptionStatus';
+import { useSubscriptionStatus, useManageSubscription } from '@/hooks/useUserProfile';
 import { useLoginModal, useLibraryModal } from '@/store/modalStore';
 
 export const Route = createFileRoute('/account')({

@@ -58,8 +58,17 @@ function TermsPage() {
             If you try to do anything weird while using the app, like trying to access other people's data or otherwise using the app in a manner outside of its intentions, especially in a manner in which it negatively impacts the experience of other users, we reserve the right to cancel your Premium services, or do things like block your IP address from accessing the app. Please don't. We are actually just one guy in three trenchcoats, and we just want to be helpful.
           </p>
           <p>
-            We would've liked to provide a female model as well, but open-source data goes back to this one project at a Japanese university where they made meshes of all the structures of the human body. All the accreditations can be found over at the Z-anatomy project website. This app would not be possible without the invaluable efforts of the folks at the Z-anatomy project.
+            We would've liked to provide a female model as well, but open-source data goes back to this one project at a Japanese university where they made meshes of all the structures of the human body, called BodyParts3D - The Database Center for Life Science" under CC-BY-SA 2.1 Japan. All other attributions can be found over at the Z-anatomy project website, and the model here was acquired through Z-Anatomy under CC-BY-SA 4.0. This app would not be possible without the invaluable efforts of the folks at the Z-anatomy project.
           </p>
+          <p>
+            In keeping with the original spirit, the data and the base model here is free for you to clone and access under CC-BY-SA 4.0 as well.
+          </p>
+          <section>
+            <h3 className="text-xl font-semibold text-surface-100 mb-4">
+              Authors:
+            </h3>
+            <p>Darryl Joo</p>
+          </section>
         </section>
       </div>
     </PageLayout>

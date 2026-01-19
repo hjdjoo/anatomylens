@@ -19,7 +19,8 @@
     "supabase:reset": "supabase db reset && npm run supabase:seed",
     "supabase:start": "supabase stop && sleep 5 && supabase start && npm run supabase:functions-serve",
     "stripe:listen": "stripe listen --forward-to localhost:54321/functions/v1/stripe-webhook",
-    "start:functions": "npm run supabase:functions-serve && npm run stripe:listen"
+    "start:functions": "npm run supabase:functions-serve && npm run stripe:listen",
+    "start": ""
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.4",
