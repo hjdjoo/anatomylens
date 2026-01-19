@@ -5,9 +5,9 @@
  * Pre-fills the current structure as primary muscle.
  */
 
-import { useState, useCallback } from 'react';
-import { 
-  useCreateSuggestion, 
+import { useState } from 'react';
+import {
+  useCreateSuggestion,
   type SuggestionStructureMapping,
   type SuggestionInvolvement,
 } from '@/hooks/useExerciseSuggestions';
@@ -55,17 +55,17 @@ const COMMON_EQUIPMENT = [
 // MAIN COMPONENT
 // ============================================================
 
-export function SuggestionForm({ 
-  meshId, 
-  structureName, 
-  onSuccess, 
-  onCancel 
+export function SuggestionForm({
+  meshId,
+  structureName,
+  onSuccess,
+  onCancel
 }: SuggestionFormProps) {
-  const { 
-    createSuggestion, 
-    loading, 
-    error, 
-    canSubmit, 
+  const {
+    createSuggestion,
+    loading,
+    error,
+    canSubmit,
     remainingToday,
     clearError,
   } = useCreateSuggestion();
@@ -115,8 +115,8 @@ export function SuggestionForm({
   };
 
   const toggleEquipment = (item: string) => {
-    setEquipment(prev => 
-      prev.includes(item) 
+    setEquipment(prev =>
+      prev.includes(item)
         ? prev.filter(e => e !== item)
         : [...prev, item]
     );
@@ -261,7 +261,7 @@ export function SuggestionForm({
             </button>
           ))}
         </div>
-        
+
         {/* Custom equipment */}
         <div className="flex gap-2">
           <input
@@ -286,7 +286,7 @@ export function SuggestionForm({
             Add
           </button>
         </div>
-        
+
         {/* Selected equipment display */}
         {equipment.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -328,7 +328,7 @@ export function SuggestionForm({
         <p className="text-[10px] text-surface-500">
           {remainingToday} suggestion{remainingToday !== 1 ? 's' : ''} remaining today
         </p>
-        
+
         <div className="flex gap-2">
           {onCancel && (
             <button
