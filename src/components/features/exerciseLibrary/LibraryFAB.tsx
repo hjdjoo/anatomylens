@@ -30,7 +30,7 @@ export function LibraryFAB() {
   return (
     <button
       onClick={openLibrary}
-      className="fixed bottom-12 left-3 md:left-6 z-40 group"
+      className="fixed bottom-32 md:bottm-12 right-3 md:right-6 z-40 group"
       title="My Exercise Library"
     >
       <div className="relative">
@@ -43,9 +43,9 @@ export function LibraryFAB() {
           transition-all duration-200
           hover:scale-105 active:scale-95
         ">
-          <svg 
-            className="w-6 h-6 text-white" 
-            fill="currentColor" 
+          <svg
+            className="w-6 h-6 text-white"
+            fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
