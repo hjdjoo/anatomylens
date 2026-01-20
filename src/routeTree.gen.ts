@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,6 +25,11 @@ const TermsRoute = TermsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/home': typeof HomeRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/auth/callback/$': typeof AuthCallbackSplatRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/home': typeof HomeRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/auth/callback/$': typeof AuthCallbackSplatRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/home': typeof HomeRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/auth/callback/$': typeof AuthCallbackSplatRoute
@@ -78,16 +87,25 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/account'
+    | '/home'
     | '/privacy'
     | '/terms'
     | '/auth/callback/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/account' | '/privacy' | '/terms' | '/auth/callback/$'
+  to:
+    | '/'
+    | '/about'
+    | '/account'
+    | '/home'
+    | '/privacy'
+    | '/terms'
+    | '/auth/callback/$'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/account'
+    | '/home'
     | '/privacy'
     | '/terms'
     | '/auth/callback/$'
@@ -97,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRoute
+  HomeRoute: typeof HomeRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackSplatRoute: typeof AuthCallbackSplatRoute
@@ -116,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -153,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
+  HomeRoute: HomeRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   AuthCallbackSplatRoute: AuthCallbackSplatRoute,

@@ -37,13 +37,13 @@ Deno.serve(async (req) => {
     // Parse request body
     const body = await req.json().catch(() => ({}));
     const {
-      successUrl = `${req.headers.get('origin')}/`,
-      cancelUrl = `${req.headers.get('origin')}/`,
+      successUrl = `${req.headers.get('origin')}/home`,
+      cancelUrl = `${req.headers.get('origin')}/home`,
     } = body;
 
     // Get or create Stripe customer
     const supabaseAdmin = createSupabaseAdmin();
-    
+
     // Fetch user profile to check for existing stripe_customer_id
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('user_profiles')
