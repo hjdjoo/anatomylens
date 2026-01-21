@@ -31,7 +31,7 @@ function AccountPage() {
   useEffect(() => {
     if (!authLoading && !user) {
       openLogin();
-      navigate({ to: '/' });
+      navigate({ to: '/home' });
     }
 
   }, [authLoading, user, openLogin, navigate]);
@@ -179,7 +179,7 @@ function AccountPage() {
                     </button>
                   ) : !isPremium ? (
                     <Link
-                      to="/"
+                      to="/home"
                       search={{ upgrade: true }}
                       className="px-4 py-2 bg-accent-600 hover:bg-accent-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
                     >

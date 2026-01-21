@@ -11,7 +11,7 @@ function LandingPage() {
   const { open } = useLoginModal()
 
   return (
-    <div className="min-h-screen bg-surface-950 text-white overflow-x-hidden">
+    <div className="min-h-screen bg-surface-950 text-white overflow-x-hidden overflow-y-hidden">
       {/* Background layers */}
       <div className="fixed inset-0 bg-gradient-to-b from-surface-900 via-surface-950 to-black" />
       <div
@@ -23,7 +23,7 @@ function LandingPage() {
       />
 
       {/* Subtle glow behind hero */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-500/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Content */}
       <div className="relative z-10">
@@ -50,7 +50,7 @@ function LandingPage() {
             {!loading && (
               user ? (
                 <Link
-                  to="/"
+                  to="/home"
                   className="text-sm px-4 py-2 bg-primary-600 hover:bg-primary-500 rounded-lg transition-colors"
                 >
                   Open App
@@ -68,22 +68,22 @@ function LandingPage() {
         </header>
 
         {/* Hero Section */}
-        <main className="px-6 md:px-12 pt-8 md:pt-16 pb-20">
+        <main className="relative px-6 md:px-12 overflow-hidden">
           <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-
+            <div className="flex flex-col lg:flex-row justify-between items-center gap-12">
               {/* Left: Text content */}
-              <div className="space-y-8 text-center lg:text-left">
+              <div className="relative lg:grow-1 space-y-8 text-center lg:self-start lg:text-left mt-36 md:mt-36 pb-8 z-10">
+                <div className="absolute inset-0 bg-gradient-to-t via-surface-950 from-surface-950 to-surface-950/90 rounded-3xl blur-xl -z-10" />
                 <div className="space-y-4">
                   <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
                     Explore Human
                     <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-600">
+                    <span className="bg-clip-text bg-gradient-to-r from-primary-400 to-primary-600">
                       Anatomy in 3D
                     </span>
                   </h1>
                   <p className="text-lg md:text-xl text-surface-400 max-w-lg mx-auto lg:mx-0">
-                    Interactive anatomical visualization for students, fitness professionals, and educators.
+                    Interactive anatomical visualization for students, fitness enthusiasts, and educators.
                   </p>
                 </div>
 
@@ -105,7 +105,6 @@ function LandingPage() {
                     Learn More
                   </Link>
                 </div>
-
                 {/* Feature highlights */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
                   <FeatureCard
@@ -136,29 +135,29 @@ function LandingPage() {
                     description="Premium from $1.99/mo"
                   />
                 </div>
-              </div>
-
-              {/* Right: Hero image */}
-              <div className="relative flex items-center justify-center">
-                {/* Glow effect behind image */}
-                <div className="absolute inset-0 bg-gradient-to-t from-primary-500/10 via-transparent to-transparent rounded-3xl blur-2xl" />
-
-                <div className="relative w-full max-w-md lg:max-w-lg xl:max-w-xl">
-                  <img
-                    src="/anatomylens_model.png"
-                    alt="3D anatomical model preview"
-                    className="w-full h-auto drop-shadow-2xl"
-                    loading="eager"
-                    fetchPriority="high"
-                  />
-
-                  {/* Floating badge */}
-                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-surface-800/90 backdrop-blur-sm rounded-full border border-surface-700/50 shadow-xl">
+                {/* Floating badge */}
+                <div className="w-full flex justify-center">
+                  <div className="-bottom-4left-1/2 max-w-fit px-4 py-2 bg-surface-800/90 backdrop-blur-sm rounded-full border border-surface-700/50 shadow-xl">
                     <p className="text-xs text-surface-400 whitespace-nowrap">
                       Based on <span className="text-surface-300">Z-Anatomy</span> open-source dataset
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Right: Hero image */}
+              <div className="absolute w-full grow-0 flex justify-center lg:relative max-h-fit max-w-fit ">
+                {/* Glow effect behind image */}
+                <div className="absolute inset-0 bg-gradient-to-t from-primary-500/10 via-transparent to-transparent rounded-3xl blur-2xl" />
+                <div className="w-full flex flex-col max-w-sm lg:max-w-md xl:max-w-lg">
+                  <img
+                    src="/anatomylens_model.png"
+                    alt="3D anatomical model preview"
+                    className="drop-shadow-2xl"
+                    loading="eager"
+                  />
+                </div>
+
               </div>
             </div>
           </div>
@@ -200,7 +199,7 @@ function FeatureCard({
       <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-primary-500/10 text-primary-400">
         {icon}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex flex-col items-start text-left">
         <h3 className="font-medium text-white text-sm">{title}</h3>
         <p className="text-xs text-surface-500 mt-0.5">{description}</p>
       </div>
