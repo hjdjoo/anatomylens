@@ -5,7 +5,7 @@ import { useToast } from "@/store";
 
 export function useSubscriptionFeedback() {
 
-  const search = useSearch({ from: "/" });
+  const search = useSearch({ from: "/home" });
   const navigate = useNavigate();
   const toast = useToast();
 

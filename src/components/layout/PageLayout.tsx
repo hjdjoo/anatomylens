@@ -17,7 +17,7 @@ export function PageLayout({ children, title, subtitle }: PageLayoutProps) {
       <header className="sticky top-0 z-50 bg-surface-900/80 backdrop-blur-xl border-b border-surface-700/50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link
-            to="/"
+            to="/home"
             className="flex items-center gap-2 text-surface-100 hover:text-accent-400 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -27,7 +27,7 @@ export function PageLayout({ children, title, subtitle }: PageLayoutProps) {
           </Link>
 
           <Link
-            to="/"
+            to="/home"
             className="text-lg font-semibold text-surface-100"
           >
             AnatomyLens

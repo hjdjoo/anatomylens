@@ -47,10 +47,10 @@ function AuthCallback() {
         if (session) {
           console.log('[AuthCallback] Logged in as:', session.user.email);
           // Redirect to home (or wherever the user came from)
-          navigate({ from: "/auth/callback/$", to: "/" });
+          navigate({ from: "/auth/callback/$", to: "/home" });
         } else {
           // Session not ready yet, wait briefly
-          setTimeout(() => navigate({ from: "/auth/callback/$", to: "/" }), 500);
+          setTimeout(() => navigate({ from: "/auth/callback/$", to: "/home" }), 500);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Authentication failed');
