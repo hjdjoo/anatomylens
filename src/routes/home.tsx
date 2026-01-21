@@ -15,7 +15,7 @@ export const Route = createFileRoute('/home')({
   component: HomePage,
   validateSearch: (search: Record<string, unknown>): HomeSearchParams => {
     return {
-      subscription: search.subcription as HomeSearchParams['subscription'],
+      subscription: search.subscription as HomeSearchParams['subscription'],
       session_id: search.session_id as string
     }
   }
