@@ -1,13 +1,14 @@
 {
   "_metadata": {
-    "version": "1.0",
+    "version": "1.1",
     "description": "Exercise seed data for anatomy explorer database",
-    "total_exercises": 94,
+    "total_exercises": 118,
     "notes": [
       "mesh_ids reference structures from body_registry.json",
       "Import script should resolve mesh_id to structure_id",
       "Bilateral structures use base name without .l/.r suffix",
-      "Involvement: primary (main mover), secondary (assist), stabilizer, stretched"
+      "Involvement: primary (main mover), secondary (assist), stabilizer, stretched",
+      "v1.1 adds rehabilitation/prehab exercises targeting stabilizing muscles"
     ]
   },
   "exercises": [
@@ -1937,6 +1938,529 @@
       "stabilizer_structures": [
         "rectus_abdominis_muscle",
         "psoas_major"
+      ]
+    },
+    {
+      "name": "Prone Y-Raise",
+      "slug": "prone-y-raise",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "scapular_retraction",
+      "description": "Lie face-down with arms extended overhead in a Y position. Lift arms toward ceiling while squeezing shoulder blades. Focus on lower trapezius activation.",
+      "primary_structures": [
+        "ascending_part_of_trapezius_muscle"
+      ],
+      "secondary_structures": [
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "serratus_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Prone T-Raise",
+      "slug": "prone-t-raise",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "scapular_retraction",
+      "description": "Lie face-down with arms extended to sides forming a T. Lift arms toward ceiling squeezing shoulder blades together. Targets middle trapezius and rhomboids.",
+      "primary_structures": [
+        "transverse_part_of_trapezius_muscle",
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle"
+      ],
+      "secondary_structures": [
+        "scapular_spinal_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "ascending_part_of_trapezius_muscle"
+      ]
+    },
+    {
+      "name": "Prone W-Raise",
+      "slug": "prone-w-raise",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "shoulder_external_rotation",
+      "description": "Lie face-down with elbows bent at 90 degrees forming a W shape. Lift hands toward ceiling while externally rotating shoulders. Excellent for rotator cuff.",
+      "primary_structures": [
+        "infraspinatus_muscle",
+        "teres_minor_muscle"
+      ],
+      "secondary_structures": [
+        "transverse_part_of_trapezius_muscle",
+        "rhomboid_minor_muscle"
+      ],
+      "stabilizer_structures": [
+        "ascending_part_of_trapezius_muscle"
+      ]
+    },
+    {
+      "name": "Wall Slide",
+      "slug": "wall-slide",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "scapular_upward_rotation",
+      "description": "Stand with back and arms against wall. Slide arms overhead maintaining contact with wall. Promotes proper scapular mechanics and serratus activation.",
+      "primary_structures": [
+        "serratus_anterior_muscle",
+        "ascending_part_of_trapezius_muscle"
+      ],
+      "secondary_structures": [
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "stabilizer_structures": [
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle"
+      ]
+    },
+    {
+      "name": "Serratus Wall Push",
+      "slug": "serratus-wall-push",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "scapular_protraction",
+      "description": "Stand facing wall with arms straight, hands on wall. Push into wall to protract shoulder blades, then relax. Isolates serratus anterior.",
+      "primary_structures": [
+        "serratus_anterior_muscle"
+      ],
+      "secondary_structures": [],
+      "stabilizer_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle"
+      ]
+    },
+    {
+      "name": "Scapular Push-Up",
+      "slug": "scapular-push-up",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "scapular_protraction",
+      "description": "In push-up position, keep arms straight. Let shoulder blades pinch together, then push through to protract them. No elbow bend.",
+      "primary_structures": [
+        "serratus_anterior_muscle"
+      ],
+      "secondary_structures": [
+        "sternocostal_head_of_pectoralis_major_muscle"
+      ],
+      "stabilizer_structures": [
+        "rectus_abdominis_muscle",
+        "transverse_part_of_trapezius_muscle"
+      ]
+    },
+    {
+      "name": "Banded Pull-Apart",
+      "slug": "banded-pull-apart",
+      "difficulty": 1,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "shoulder_horizontal_abduction",
+      "description": "Hold band at shoulder width, arms extended. Pull band apart by squeezing shoulder blades. Excellent for postural correction.",
+      "primary_structures": [
+        "rhomboid_major_muscle",
+        "rhomboid_minor_muscle",
+        "transverse_part_of_trapezius_muscle"
+      ],
+      "secondary_structures": [
+        "scapular_spinal_part_of_deltoid_muscle",
+        "infraspinatus_muscle"
+      ],
+      "stabilizer_structures": [
+        "ascending_part_of_trapezius_muscle"
+      ]
+    },
+    {
+      "name": "Side-Lying External Rotation",
+      "slug": "side-lying-external-rotation",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "shoulder_rotation",
+      "description": "Lie on side with elbow at 90 degrees against ribs. Rotate forearm upward keeping elbow fixed. Isolates external rotators without compensation.",
+      "primary_structures": [
+        "infraspinatus_muscle",
+        "teres_minor_muscle"
+      ],
+      "secondary_structures": [],
+      "stabilizer_structures": [
+        "scapular_spinal_part_of_deltoid_muscle"
+      ]
+    },
+    {
+      "name": "Prone Swimmer",
+      "slug": "prone-swimmer",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "shoulder_flexion_extension",
+      "description": "Lie face-down, alternate lifting opposite arm and leg in swimming motion. Promotes shoulder stability through range of motion.",
+      "primary_structures": [
+        "ascending_part_of_trapezius_muscle",
+        "erector_spinae_muscle"
+      ],
+      "secondary_structures": [
+        "transverse_part_of_trapezius_muscle",
+        "rhomboid_major_muscle",
+        "gluteus_maximus_muscle"
+      ],
+      "stabilizer_structures": [
+        "multifidus_muscle",
+        "serratus_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Banded External Rotation at 90",
+      "slug": "banded-external-rotation-90",
+      "difficulty": 2,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "shoulder_rotation",
+      "description": "Arm at 90 degrees abduction, elbow at 90 degrees. Rotate forearm from parallel to floor to perpendicular. High-level rotator cuff work.",
+      "primary_structures": [
+        "infraspinatus_muscle",
+        "teres_minor_muscle"
+      ],
+      "secondary_structures": [
+        "supraspinatus_muscle"
+      ],
+      "stabilizer_structures": [
+        "acromial_part_of_deltoid_muscle",
+        "transverse_part_of_trapezius_muscle"
+      ]
+    },
+    {
+      "name": "Banded Internal Rotation at 90",
+      "slug": "banded-internal-rotation-90",
+      "difficulty": 2,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "shoulder_rotation",
+      "description": "Arm at 90 degrees abduction, elbow at 90 degrees. Rotate forearm from perpendicular to parallel with floor. Targets subscapularis.",
+      "primary_structures": [
+        "subscapularis_muscle"
+      ],
+      "secondary_structures": [
+        "teres_major_muscle",
+        "latissimus_dorsi_muscle"
+      ],
+      "stabilizer_structures": [
+        "acromial_part_of_deltoid_muscle"
+      ]
+    },
+    {
+      "name": "Supraspinatus Raise (Empty Can)",
+      "slug": "supraspinatus-raise",
+      "difficulty": 1,
+      "equipment": [
+        "dumbbell"
+      ],
+      "category": "rehab_shoulder",
+      "movement_pattern": "shoulder_abduction",
+      "description": "Raise arm at 30 degrees forward of side (scapular plane) with thumb down. Isolates supraspinatus for rotator cuff strengthening.",
+      "primary_structures": [
+        "supraspinatus_muscle"
+      ],
+      "secondary_structures": [
+        "acromial_part_of_deltoid_muscle"
+      ],
+      "stabilizer_structures": [
+        "transverse_part_of_trapezius_muscle"
+      ]
+    },
+    {
+      "name": "Single-Leg Balance",
+      "slug": "single-leg-balance",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_lower",
+      "movement_pattern": "balance",
+      "description": "Stand on one leg maintaining balance for time. Progress by closing eyes. Builds ankle proprioception and hip stability.",
+      "primary_structures": [
+        "gluteus_medius_muscle",
+        "gluteus_minimus_muscle"
+      ],
+      "secondary_structures": [
+        "tibialis_anterior_muscle",
+        "tibialis_posterior_muscle",
+        "fibularis_longus_muscle",
+        "fibularis_brevis_muscle"
+      ],
+      "stabilizer_structures": [
+        "abductor_hallucis",
+        "flexor_digitorum_brevis",
+        "quadratus_plantae_muscle",
+        "rectus_abdominis_muscle"
+      ]
+    },
+    {
+      "name": "Single-Leg Balance on Unstable Surface",
+      "slug": "single-leg-balance-unstable",
+      "difficulty": 3,
+      "equipment": [
+        "bosu_ball"
+      ],
+      "category": "rehab_lower",
+      "movement_pattern": "balance",
+      "description": "Stand on one leg on BOSU or foam pad. Greatly increases proprioceptive demand on ankle and foot intrinsics.",
+      "primary_structures": [
+        "gluteus_medius_muscle",
+        "gluteus_minimus_muscle"
+      ],
+      "secondary_structures": [
+        "tibialis_anterior_muscle",
+        "tibialis_posterior_muscle",
+        "fibularis_longus_muscle",
+        "fibularis_brevis_muscle",
+        "soleus_muscle"
+      ],
+      "stabilizer_structures": [
+        "abductor_hallucis",
+        "flexor_digitorum_brevis",
+        "quadratus_plantae_muscle",
+        "dorsal_interossei_muscles_of_foot",
+        "lumbrical_muscles_of_foot"
+      ]
+    },
+    {
+      "name": "Short Foot Exercise",
+      "slug": "short-foot-exercise",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_foot",
+      "movement_pattern": "arch_activation",
+      "description": "While standing, draw toes toward heel without curling toes, lifting arch. Activates foot intrinsic muscles for arch support.",
+      "primary_structures": [
+        "abductor_hallucis",
+        "flexor_digitorum_brevis",
+        "quadratus_plantae_muscle"
+      ],
+      "secondary_structures": [
+        "lumbrical_muscles_of_foot",
+        "tibialis_posterior_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Toe Yoga",
+      "slug": "toe-yoga",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_foot",
+      "movement_pattern": "toe_isolation",
+      "description": "Practice lifting big toe while keeping small toes down, then reverse. Improves neural control of foot intrinsics.",
+      "primary_structures": [
+        "extensor_hallucis_brevis",
+        "flexor_digitorum_brevis"
+      ],
+      "secondary_structures": [
+        "abductor_hallucis",
+        "abductor_digiti_minimi_of_foot",
+        "lumbrical_muscles_of_foot"
+      ],
+      "stabilizer_structures": [
+        "tibialis_anterior_muscle"
+      ]
+    },
+    {
+      "name": "Towel Toe Curl",
+      "slug": "towel-toe-curl",
+      "difficulty": 1,
+      "equipment": [
+        "towel"
+      ],
+      "category": "rehab_foot",
+      "movement_pattern": "toe_flexion",
+      "description": "Place towel under foot, curl toes to gather towel toward heel. Strengthens toe flexors and foot intrinsics.",
+      "primary_structures": [
+        "flexor_digitorum_brevis",
+        "quadratus_plantae_muscle",
+        "lumbrical_muscles_of_foot"
+      ],
+      "secondary_structures": [
+        "flexor_hallucis_longus"
+      ],
+      "stabilizer_structures": [
+        "tibialis_posterior_muscle"
+      ]
+    },
+    {
+      "name": "Banded Ankle Eversion",
+      "slug": "banded-ankle-eversion",
+      "difficulty": 1,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "rehab_foot",
+      "movement_pattern": "ankle_eversion",
+      "description": "With band around forefoot, turn sole of foot outward against resistance. Strengthens ankle evertors to prevent sprains.",
+      "primary_structures": [
+        "fibularis_longus_muscle",
+        "fibularis_brevis_muscle"
+      ],
+      "secondary_structures": [
+        "fibularis_tertius_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Banded Ankle Inversion",
+      "slug": "banded-ankle-inversion",
+      "difficulty": 1,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "rehab_foot",
+      "movement_pattern": "ankle_inversion",
+      "description": "With band around forefoot anchored to side, turn sole of foot inward against resistance. Strengthens tibialis posterior.",
+      "primary_structures": [
+        "tibialis_posterior_muscle"
+      ],
+      "secondary_structures": [
+        "tibialis_anterior_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Clamshell",
+      "slug": "clamshell",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_lower",
+      "movement_pattern": "hip_external_rotation",
+      "description": "Lie on side with knees bent. Keep feet together while lifting top knee. Isolates gluteus medius and hip external rotators.",
+      "primary_structures": [
+        "gluteus_medius_muscle",
+        "gluteus_minimus_muscle"
+      ],
+      "secondary_structures": [
+        "piriformis_muscle"
+      ],
+      "stabilizer_structures": [
+        "quadratus_lumborum_muscle"
+      ]
+    },
+    {
+      "name": "Banded Clamshell",
+      "slug": "banded-clamshell",
+      "difficulty": 2,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "rehab_lower",
+      "movement_pattern": "hip_external_rotation",
+      "description": "Clamshell with band around thighs for added resistance. Progressive overload for hip abductors.",
+      "primary_structures": [
+        "gluteus_medius_muscle",
+        "gluteus_minimus_muscle"
+      ],
+      "secondary_structures": [
+        "piriformis_muscle",
+        "tensor_fasciae_latae"
+      ],
+      "stabilizer_structures": [
+        "quadratus_lumborum_muscle"
+      ]
+    },
+    {
+      "name": "Side-Lying Hip Abduction",
+      "slug": "side-lying-hip-abduction",
+      "difficulty": 1,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_lower",
+      "movement_pattern": "hip_abduction",
+      "description": "Lie on side with legs straight. Lift top leg toward ceiling keeping it straight. Pure gluteus medius isolation.",
+      "primary_structures": [
+        "gluteus_medius_muscle"
+      ],
+      "secondary_structures": [
+        "gluteus_minimus_muscle",
+        "tensor_fasciae_latae"
+      ],
+      "stabilizer_structures": [
+        "quadratus_lumborum_muscle"
+      ]
+    },
+    {
+      "name": "Terminal Knee Extension",
+      "slug": "terminal-knee-extension",
+      "difficulty": 1,
+      "equipment": [
+        "resistance_band"
+      ],
+      "category": "rehab_lower",
+      "movement_pattern": "knee_extension",
+      "description": "With band behind knee, start with slight knee bend. Straighten knee fully against band resistance. Targets VMO for knee stability.",
+      "primary_structures": [
+        "vastus_medialis_muscle"
+      ],
+      "secondary_structures": [
+        "rectus_femoris_muscle",
+        "vastus_lateralis_muscle"
+      ],
+      "stabilizer_structures": []
+    },
+    {
+      "name": "Single-Leg Calf Raise",
+      "slug": "single-leg-calf-raise",
+      "difficulty": 2,
+      "equipment": [
+        "bodyweight"
+      ],
+      "category": "rehab_lower",
+      "movement_pattern": "ankle_plantarflexion",
+      "description": "Standing on one leg, raise heel as high as possible. Builds calf strength and ankle stability unilaterally.",
+      "primary_structures": [
+        "medial_head_of_gastrocnemius",
+        "lateral_head_of_gastrocnemius",
+        "soleus_muscle"
+      ],
+      "secondary_structures": [
+        "plantaris_muscle",
+        "tibialis_posterior_muscle"
+      ],
+      "stabilizer_structures": [
+        "fibularis_longus_muscle",
+        "fibularis_brevis_muscle",
+        "gluteus_medius_muscle"
       ]
     }
   ]
